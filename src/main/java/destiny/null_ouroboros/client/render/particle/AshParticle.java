@@ -22,7 +22,7 @@ public class AshParticle extends TextureSheetParticle {
         this.bCol = 1f;
         this.yd = 0.02f + ModUtil.getBoundRandomFloatStatic(level, -0.005f, 0.005f);
         this.gravity = 1f;
-        this.quadSize = 0.2f;
+        this.quadSize = 0.1f;
         this.rollDirection = level.random.nextBoolean();
         this.rollOffset = ModUtil.getBoundRandomFloatStatic(level, -0.1f, 0.1f);
     }
