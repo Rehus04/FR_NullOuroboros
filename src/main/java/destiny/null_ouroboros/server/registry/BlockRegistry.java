@@ -7,10 +7,7 @@ import destiny.null_ouroboros.server.block.ScorchedSaplingBlock;
 import destiny.null_ouroboros.server.worldgen.grower.ScorchedTreeGrower;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.FallingBlock;
-import net.minecraft.world.level.block.RotatedPillarBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraftforge.registries.DeferredRegister;
@@ -24,7 +21,7 @@ public class BlockRegistry {
 
     public static final RegistryObject<Block> ASH_PILE = registerBlock("ash_pile",
             () -> new AshPileBlock(BlockBehaviour.Properties.copy(Blocks.SAND)
-                    .mapColor(MapColor.COLOR_LIGHT_GRAY).noOcclusion()));
+                    .mapColor(MapColor.COLOR_LIGHT_GRAY).noOcclusion().replaceable()));
     public static final RegistryObject<Block> ASH_BLOCK = registerBlock("ash_block",
             () -> new AshBlock(BlockBehaviour.Properties.copy(Blocks.SAND)
                     .mapColor(MapColor.COLOR_LIGHT_GRAY)));
@@ -38,6 +35,19 @@ public class BlockRegistry {
     public static final RegistryObject<Block> SCORCHED_SAPLING = registerBlock("scorched_sapling",
             () -> new ScorchedSaplingBlock(new ScorchedTreeGrower(), BlockBehaviour.Properties.copy(Blocks.OAK_SAPLING)
                     .mapColor(MapColor.COLOR_GRAY)));
+
+    public static final RegistryObject<Block> BLACKMETAL = registerBlock("blackmetal",
+            () -> new Block(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
+                    .mapColor(MapColor.COLOR_GRAY).sound(SoundType.LANTERN)));
+    public static final RegistryObject<Block> BLACKMETAL_PLATE = registerBlock("blackmetal_plate",
+            () -> new Block(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
+                    .mapColor(MapColor.COLOR_GRAY).sound(SoundType.LANTERN)));
+    public static final RegistryObject<Block> BLACKMETAL_TILES = registerBlock("blackmetal_tiles",
+            () -> new Block(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
+                    .mapColor(MapColor.COLOR_GRAY).sound(SoundType.LANTERN)));
+    public static final RegistryObject<Block> BLACKMETAL_SUPPORT = registerBlock("blackmetal_support",
+            () -> new Block(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
+                    .mapColor(MapColor.COLOR_GRAY).sound(SoundType.LANTERN).noOcclusion()));
 
     private static <T extends Block> RegistryObject<T> registerBlock(String name, Supplier<T> block) {
         RegistryObject<T> toReturn = BLOCKS.register(name, block);

@@ -20,6 +20,11 @@ public class CreativeTabRegistry {
 
                 output.accept(BlockRegistry.SCORCHED_LOG.get());
                 output.accept(BlockRegistry.SCORCHED_SAPLING.get());
+
+                output.accept(BlockRegistry.BLACKMETAL.get());
+                output.accept(BlockRegistry.BLACKMETAL_PLATE.get());
+                output.accept(BlockRegistry.BLACKMETAL_TILES.get());
+                output.accept(BlockRegistry.BLACKMETAL_SUPPORT.get());
             })
             .build()
     );

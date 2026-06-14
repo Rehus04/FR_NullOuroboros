@@ -11,13 +11,21 @@ import net.minecraft.world.level.block.grower.AbstractTreeGrower;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class ScorchedSaplingBlock extends SaplingBlock {
+    private final AbstractTreeGrower treeGrower;
+
     public ScorchedSaplingBlock(AbstractTreeGrower pTreeGrower, Properties pProperties) {
         super(pTreeGrower, pProperties);
+        this.treeGrower = pTreeGrower;
+    }
+
+    @Override
+    public void advanceTree(ServerLevel level, BlockPos pos, BlockState state, RandomSource randomSource) {
+        this.treeGrower.growTree(level, level.getChunkSource().getGenerator(), pos, state, randomSource);
     }
 
     @Override
     public void randomTick(BlockState pState, ServerLevel pLevel, BlockPos pPos, RandomSource pRandom) {
-        if (pLevel.isAreaLoaded(pPos, 1) && pLevel.getBlockState(pPos.below()) == BlockRegistry.ASH_BLOCK.get().defaultBlockState()) {
+        if (pLevel.isAreaLoaded(pPos, 1) && mayPlaceOn(pLevel.getBlockState(pPos.below()), pLevel, pPos)) {
             this.advanceTree(pLevel, pPos, pState, pRandom);
         }
     }

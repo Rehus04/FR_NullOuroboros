@@ -1,16 +1,18 @@
 package destiny.null_ouroboros.server.block;
 
+import destiny.null_ouroboros.server.registry.BlockRegistry;
 import destiny.null_ouroboros.server.registry.ParticleTypeRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.ParticleUtils;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FallingBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -42,13 +44,24 @@ public class AshPileBlock extends FallingBlock {
                     16.0F, 12.0F, 16.0F),
             Block.box(0.0F, 0.0F, 0.0F,
                     16.0F, 14.0F, 16.0F),
-            Block.box(0.0F, 0.0F, 0.0F,
-                    16.0F, 16.0F, 16.0F)};
+            Shapes.block()};
     public static final int HEIGHT_IMPASSABLE = 5;
 
     public AshPileBlock(Properties properties) {
         super(properties);
         this.registerDefaultState(this.defaultBlockState().setValue(LAYERS, 1));
+    }
+
+    @Override
+    public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource randomSource) {
+        if (isFree(level.getBlockState(pos.below())) && pos.getY() >= level.getMinBuildHeight()) {
+            FallingBlockEntity $$4 = FallingBlockEntity.fall(level, pos, state);
+            this.falling($$4);
+        }
+    }
+
+    public static boolean isFree(BlockState state) {
+        return state.isAir() || state.is(BlockTags.FIRE) || state.liquid() || (state.canBeReplaced() && !state.is(BlockRegistry.ASH_PILE.get()));
     }
 
     @Override
@@ -83,7 +96,7 @@ public class AshPileBlock extends FallingBlock {
 
     @Override
     public VoxelShape getCollisionShape(BlockState state, BlockGetter getter, BlockPos pos, CollisionContext context) {
-        return SHAPE_BY_LAYER[state.getValue(LAYERS) - 1];
+        return SHAPE_BY_LAYER[state.getValue(LAYERS)];
     }
 
     @Override
@@ -107,22 +120,27 @@ public class AshPileBlock extends FallingBlock {
     }
 
     @Override
-    public BlockState updateShape(BlockState newState, Direction direction, BlockState oldState, LevelAccessor accessor, BlockPos newPos, BlockPos oldPos) {
-        return !newState.canSurvive(accessor, newPos) ? Blocks.AIR.defaultBlockState() : super.updateShape(newState, direction, oldState, accessor, newPos, oldPos);
-    }
-
-    @Override
     public boolean canBeReplaced(BlockState state, BlockPlaceContext context) {
         int layers = state.getValue(LAYERS);
         if (context.getItemInHand().is(this.asItem()) && layers < MAX_HEIGHT) {
             if (context.replacingClickedOnBlock()) {
                 return context.getClickedFace() == Direction.UP;
             } else {
-                return true;
+                return false;
             }
         } else {
-            return layers == 1;
+            return layers < MAX_HEIGHT;
         }
+    }
+
+    @Override
+    public boolean isCollisionShapeFullBlock(BlockState state, BlockGetter getter, BlockPos pos) {
+        return getter.getBlockState(pos).getValue(LAYERS) == 8;
+    }
+
+    @Override
+    public boolean isOcclusionShapeFullBlock(BlockState state, BlockGetter getter, BlockPos pos) {
+        return getter.getBlockState(pos).getValue(LAYERS) == 8;
     }
 
     @Override
