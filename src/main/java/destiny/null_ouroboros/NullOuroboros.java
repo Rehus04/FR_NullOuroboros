@@ -34,6 +34,7 @@ public class NullOuroboros {
         ParticleTypeRegistry.PARTICLE_TYPES.register(modEventBus);
         PacketHandlerRegistry.register();
         BlockEntityRegistry.BLOCK_ENTITIES.register(modEventBus);
+        SoundRegistry.SOUNDS.register(modEventBus);
 
         context.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
 

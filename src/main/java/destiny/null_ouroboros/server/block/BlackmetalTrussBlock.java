@@ -1,5 +1,6 @@
 package destiny.null_ouroboros.server.block;
 
+import destiny.null_ouroboros.server.registry.BlockRegistry;
 import destiny.null_ouroboros.server.util.ModUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -223,7 +224,7 @@ public class BlackmetalTrussBlock extends HorizontalDirectionalBlock {
 
         int connection;
         if (below.is(this) && !above.is(this) && (Block.canSupportCenter(level, pos.above(), Direction.DOWN)
-                || Block.canSupportCenter(level, pos.relative(facing), facing.getOpposite()) || front.is(this))) {
+                || Block.canSupportCenter(level, pos.relative(facing), facing.getOpposite()) || front.is(this) || front.is(BlockRegistry.DROPLIGHT.get()))) {
             connection = 3;
         } else if (!below.is(this) && Block.canSupportCenter(level, pos.below(), Direction.UP)) {
             connection = 1;

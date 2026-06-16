@@ -27,6 +27,8 @@ public class CreativeTabRegistry {
                 output.accept(BlockRegistry.BLACKMETAL_TILES.get());
                 output.accept(BlockRegistry.BLACKMETAL_SUPPORT.get());
                 output.accept(BlockRegistry.BLACKMETAL_TRUSS.get());
+
+                output.accept(BlockRegistry.DROPLIGHT.get());
             })
             .build()
     );

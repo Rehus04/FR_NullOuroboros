@@ -1,3 +1,28 @@
 {
-
+  "droplight_on": {
+    "subtitle": "sound.null_ouroboros.droplight_on",
+    "sounds": [
+      "null_ouroboros:droplight_on"
+    ]
+  },
+  "droplight_off": {
+    "subtitle": "sound.null_ouroboros.droplight_off",
+    "sounds": [
+      "null_ouroboros:droplight_off"
+    ]
+  },
+  "droplight_flicker": {
+    "subtitle": "sound.null_ouroboros.droplight_flicker",
+    "sounds": [
+      "null_ouroboros:droplight_flicker_1",
+      "null_ouroboros:droplight_flicker_2",
+      "null_ouroboros:droplight_flicker_3"
+    ]
+  },
+  "droplight_drop": {
+    "subtitle": "sound.null_ouroboros.droplight_drop",
+    "sounds": [
+      "null_ouroboros:droplight_drop"
+    ]
+  }
 }
