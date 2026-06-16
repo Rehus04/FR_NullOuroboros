@@ -1,0 +1,37 @@
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"parent": "minecraft:block/block",
+	"texture_size": [32, 32],
+	"textures": {
+		"0": "null_ouroboros:block/blackmetal_truss_side",
+		"particle": "null_ouroboros:block/blackmetal_truss_side"
+	},
+	"elements": [
+		{
+			"from": [5, 0, 11],
+			"to": [11, 16, 13],
+			"rotation": {"angle": 0, "axis": "y", "origin": [5, 0, 11]},
+			"faces": {
+				"north": {"uv": [0, 0, 3, 8], "texture": "#0"},
+				"east": {"uv": [4.5, 0, 5.5, 8], "texture": "#0"},
+				"south": {"uv": [4.5, 0, 5, 8], "texture": "#0"},
+				"west": {"uv": [5.5, 0, 4.5, 8], "texture": "#0"},
+				"up": {"uv": [9.5, 0, 12.5, 1], "texture": "#0"},
+				"down": {"uv": [9.5, 0, 12.5, 1], "texture": "#0"}
+			}
+		},
+		{
+			"from": [6, 0, 13],
+			"to": [10, 16, 16],
+			"rotation": {"angle": 0, "axis": "y", "origin": [5, 6, 11]},
+			"faces": {
+				"east": {"uv": [3, 0, 4.5, 8], "texture": "#0"},
+				"south": {"uv": [5.5, 0, 7.5, 8], "texture": "#0"},
+				"west": {"uv": [4.5, 0, 3, 8], "texture": "#0"},
+				"up": {"uv": [7.5, 0, 9.5, 1.5], "texture": "#0"},
+				"down": {"uv": [7.5, 0, 9.5, 1.5], "texture": "#0"}
+			}
+		}
+	]
+}

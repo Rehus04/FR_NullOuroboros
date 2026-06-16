@@ -1,0 +1,67 @@
+{
+  "variants": {
+    "facing=north,connection=1": {
+      "model": "null_ouroboros:block/blackmetal_truss_lower_corner"
+    },
+    "facing=north,connection=2": {
+      "model": "null_ouroboros:block/blackmetal_truss_side"
+    },
+    "facing=north,connection=3": {
+      "model": "null_ouroboros:block/blackmetal_truss_upper_corner"
+    },
+    "facing=north,connection=4": {
+      "model": "null_ouroboros:block/blackmetal_truss_upper_side"
+    },
+
+    "facing=south,connection=1": {
+      "model": "null_ouroboros:block/blackmetal_truss_lower_corner",
+      "y": 180
+    },
+    "facing=south,connection=2": {
+      "model": "null_ouroboros:block/blackmetal_truss_side",
+      "y": 180
+    },
+    "facing=south,connection=3": {
+      "model": "null_ouroboros:block/blackmetal_truss_upper_corner",
+      "y": 180
+    },
+    "facing=south,connection=4": {
+      "model": "null_ouroboros:block/blackmetal_truss_upper_side",
+      "y": 180
+    },
+
+    "facing=west,connection=1": {
+      "model": "null_ouroboros:block/blackmetal_truss_lower_corner",
+      "y": 270
+    },
+    "facing=west,connection=2": {
+      "model": "null_ouroboros:block/blackmetal_truss_side",
+      "y": 270
+    },
+    "facing=west,connection=3": {
+      "model": "null_ouroboros:block/blackmetal_truss_upper_corner",
+      "y": 270
+    },
+    "facing=west,connection=4": {
+      "model": "null_ouroboros:block/blackmetal_truss_upper_side",
+      "y": 270
+    },
+
+    "facing=east,connection=1": {
+      "model": "null_ouroboros:block/blackmetal_truss_lower_corner",
+      "y": 90
+    },
+    "facing=east,connection=2": {
+      "model": "null_ouroboros:block/blackmetal_truss_side",
+      "y": 90
+    },
+    "facing=east,connection=3": {
+      "model": "null_ouroboros:block/blackmetal_truss_upper_corner",
+      "y": 90
+    },
+    "facing=east,connection=4": {
+      "model": "null_ouroboros:block/blackmetal_truss_upper_side",
+      "y": 90
+    }
+  }
+}

@@ -1,8 +1,12 @@
 package destiny.null_ouroboros.server.block;
 
 import destiny.null_ouroboros.server.registry.BlockRegistry;
+import net.minecraft.core.BlockPos;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.ToolAction;
@@ -17,8 +21,14 @@ public class ScorchedLogBlock extends RotatedPillarBlock {
     @Override
     public @Nullable BlockState getToolModifiedState(BlockState state, UseOnContext context, ToolAction toolAction, boolean simulate) {
         if(context.getItemInHand().getItem() instanceof AxeItem) {
-            if(state.is(BlockRegistry.SCORCHED_LOG.get()))
+            if(state.is(BlockRegistry.SCORCHED_LOG.get())) {
+                Level level = context.getLevel();
+                BlockPos clickedPos = context.getClickedPos();
+
+                level.playSound(null, clickedPos, SoundEvents.ZOMBIE_BREAK_WOODEN_DOOR, SoundSource.BLOCKS, 0.1f, 1f);
+
                 return BlockRegistry.SANGUINE_LOG.get().defaultBlockState().setValue(AXIS, state.getValue(AXIS));
+            }
         }
 
         return super.getToolModifiedState(state, context, toolAction, simulate);

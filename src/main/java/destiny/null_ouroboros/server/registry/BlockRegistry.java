@@ -1,10 +1,7 @@
 package destiny.null_ouroboros.server.registry;
 
 import destiny.null_ouroboros.NullOuroboros;
-import destiny.null_ouroboros.server.block.AshBlock;
-import destiny.null_ouroboros.server.block.AshPileBlock;
-import destiny.null_ouroboros.server.block.ScorchedLogBlock;
-import destiny.null_ouroboros.server.block.ScorchedSaplingBlock;
+import destiny.null_ouroboros.server.block.*;
 import destiny.null_ouroboros.server.worldgen.grower.ScorchedTreeGrower;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -51,6 +48,9 @@ public class BlockRegistry {
                     .mapColor(MapColor.COLOR_GRAY).sound(SoundType.LANTERN)));
     public static final RegistryObject<Block> BLACKMETAL_SUPPORT = registerBlock("blackmetal_support",
             () -> new Block(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
+                    .mapColor(MapColor.COLOR_GRAY).sound(SoundType.LANTERN).noOcclusion()));
+    public static final RegistryObject<Block> BLACKMETAL_TRUSS = registerBlock("blackmetal_truss",
+            () -> new BlackmetalTrussBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
                     .mapColor(MapColor.COLOR_GRAY).sound(SoundType.LANTERN).noOcclusion()));
 
     private static <T extends Block> RegistryObject<T> registerBlock(String name, Supplier<T> block) {
