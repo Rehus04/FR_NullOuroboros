@@ -23,8 +23,6 @@ import org.joml.Vector3f;
 public class StrobelightBlockEntityRenderer implements BlockEntityRenderer<StrobelightBlockEntity> {
     private final StrobelightBlockModel model;
 
-    private static final ResourceLocation BEAM_TEXTURE = ResourceLocation.withDefaultNamespace("textures/entity/end_crystal/end_crystal_beam.png");
-
     public StrobelightBlockEntityRenderer(BlockEntityRendererProvider.Context ctx) {
         this.model = new StrobelightBlockModel(ctx.getModelSet().bakeLayer(StrobelightBlockModel.LAYER_LOCATION));
     }

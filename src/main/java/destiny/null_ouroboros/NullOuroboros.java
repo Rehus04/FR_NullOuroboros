@@ -1,8 +1,10 @@
 package destiny.null_ouroboros;
 
 import com.mojang.logging.LogUtils;
+import destiny.null_ouroboros.client.render.blockentity.MechanicalSirenBlockEntityRenderer;
 import destiny.null_ouroboros.client.render.blockentity.StrobelightBlockEntityRenderer;
 import destiny.null_ouroboros.client.render.dimension.VergeOfRealityDimensionEffects;
+import destiny.null_ouroboros.client.render.model.MechanicalSirenBlockModel;
 import destiny.null_ouroboros.client.render.model.StrobelightBlockModel;
 import destiny.null_ouroboros.client.render.particle.AshParticle;
 import destiny.null_ouroboros.server.registry.*;
@@ -58,6 +60,7 @@ public class NullOuroboros {
         @SubscribeEvent
         public static void bakeModels(EntityRenderersEvent.RegisterLayerDefinitions event) {
             event.registerLayerDefinition(StrobelightBlockModel.LAYER_LOCATION, StrobelightBlockModel::createBodyLayer);
+            event.registerLayerDefinition(MechanicalSirenBlockModel.LAYER_LOCATION, MechanicalSirenBlockModel::createBodyLayer);
         }
 
         @SubscribeEvent
@@ -82,6 +85,7 @@ public class NullOuroboros {
         @SubscribeEvent
         public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
             event.registerBlockEntityRenderer(BlockEntityRegistry.STROBELIGHT_BLOCK_ENTITY.get(), StrobelightBlockEntityRenderer::new);
+            event.registerBlockEntityRenderer(BlockEntityRegistry.MECHANICAL_SIREN_BLOCK_ENTITY.get(), MechanicalSirenBlockEntityRenderer::new);
         }
     }
 }

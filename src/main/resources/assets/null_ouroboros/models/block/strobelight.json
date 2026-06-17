@@ -5,8 +5,8 @@
 	"render_type": "minecraft:translucent",
 	"texture_size": [32, 32],
 	"textures": {
-		"0": "null_ouroboros:block/strobelight",
-		"particle": "null_ouroboros:block/strobelight"
+		"0": "null_ouroboros:block/strobelight_old",
+		"particle": "null_ouroboros:block/strobelight_old"
 	},
 	"elements": [
 		{
@@ -77,10 +77,39 @@
 		}
 	],
 	"display": {
+		"thirdperson_righthand": {
+			"rotation": [75, 45, 180],
+			"translation": [0, 2.5, 0],
+			"scale": [0.375, 0.375, 0.375]
+		},
+		"thirdperson_lefthand": {
+			"rotation": [75, 45, -180],
+			"translation": [0, 2.5, 0],
+			"scale": [0.375, 0.375, 0.375]
+		},
+		"firstperson_righthand": {
+			"rotation": [0, 45, 180],
+			"translation": [0, 1.5, 0],
+			"scale": [0.4, 0.4, 0.4]
+		},
+		"firstperson_lefthand": {
+			"rotation": [0, 45, -180],
+			"translation": [0, 1.5, 0],
+			"scale": [0.4, 0.4, 0.4]
+		},
+		"ground": {
+			"rotation": [0, 0, 180],
+			"translation": [0, 3, 0],
+			"scale": [0.25, 0.25, 0.25]
+		},
 		"gui": {
 			"rotation": [30, -135, -180],
 			"translation": [0, 1, 0],
 			"scale": [0.625, 0.625, 0.625]
+		},
+		"fixed": {
+			"rotation": [0, 0, 180],
+			"scale": [0.5, 0.5, 0.5]
 		}
 	}
 }

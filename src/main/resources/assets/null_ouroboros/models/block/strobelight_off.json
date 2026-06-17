@@ -5,8 +5,8 @@
   "render_type": "minecraft:translucent",
   "texture_size": [32, 32],
   "textures": {
-    "0": "null_ouroboros:block/strobelight_off",
-    "particle": "null_ouroboros:block/strobelight_off"
+    "0": "null_ouroboros:block/strobelight_off_old",
+    "particle": "null_ouroboros:block/strobelight_off_old"
   },
   "elements": [
     {
