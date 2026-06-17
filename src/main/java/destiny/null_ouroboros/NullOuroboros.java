@@ -1,7 +1,9 @@
 package destiny.null_ouroboros;
 
 import com.mojang.logging.LogUtils;
+import destiny.null_ouroboros.client.render.blockentity.StrobelightBlockEntityRenderer;
 import destiny.null_ouroboros.client.render.dimension.VergeOfRealityDimensionEffects;
+import destiny.null_ouroboros.client.render.model.StrobelightBlockModel;
 import destiny.null_ouroboros.client.render.particle.AshParticle;
 import destiny.null_ouroboros.server.registry.*;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -9,6 +11,7 @@ import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.client.renderer.entity.FallingBlockRenderer;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.RegisterDimensionSpecialEffectsEvent;
 import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -51,6 +54,12 @@ public class NullOuroboros {
 
     @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ClientModEvents {
+
+        @SubscribeEvent
+        public static void bakeModels(EntityRenderersEvent.RegisterLayerDefinitions event) {
+            event.registerLayerDefinition(StrobelightBlockModel.LAYER_LOCATION, StrobelightBlockModel::createBodyLayer);
+        }
+
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
             event.enqueueWork(() ->
@@ -68,6 +77,11 @@ public class NullOuroboros {
         @SubscribeEvent
         public static void registerParticleProvider(RegisterParticleProvidersEvent event) {
             event.registerSpriteSet(ParticleTypeRegistry.ASH.get(), AshParticle.Provider::new);
+        }
+
+        @SubscribeEvent
+        public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
+            event.registerBlockEntityRenderer(BlockEntityRegistry.STROBELIGHT_BLOCK_ENTITY.get(), StrobelightBlockEntityRenderer::new);
         }
     }
 }
