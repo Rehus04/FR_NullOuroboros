@@ -5,8 +5,8 @@
 	"render_type": "minecraft:cutout",
 	"texture_size": [32, 32],
 	"textures": {
-		"0": "null_ouroboros:block/droplight",
-		"particle": "null_ouroboros:block/droplight"
+		"0": "null_ouroboros:block/broken_droplight",
+		"particle": "null_ouroboros:block/broken_droplight"
 	},
 	"elements": [
 		{

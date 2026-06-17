@@ -5,14 +5,13 @@
 	"render_type": "minecraft:cutout",
 	"texture_size": [32, 32],
 	"textures": {
-		"0": "null_ouroboros:block/droplight",
-		"particle": "null_ouroboros:block/droplight"
+		"0": "null_ouroboros:block/broken_droplight_off",
+		"particle": "null_ouroboros:block/broken_droplight_off"
 	},
 	"elements": [
 		{
-			"from": [0, 11, 0],
-			"to": [16, 16, 16],
-			"rotation": {"angle": 0, "axis": "y", "origin": [0, 11, 0]},
+			"from": [0, 0, 0],
+			"to": [16, 5, 16],
 			"faces": {
 				"north": {"uv": [8, 0, 16, 2.5], "texture": "#0"},
 				"east": {"uv": [8, 0, 16, 2.5], "texture": "#0"},
@@ -23,21 +22,16 @@
 		},
 		{
 			"name": "emissive",
-			"from": [0, 11, 0],
-			"to": [16, 16, 16],
-			"forge_data": {
-				"block_light": 15,
-				"sky_light": 15
-			},
-			"rotation": {"angle": 0, "axis": "y", "origin": [0, 11, 0]},
+			"from": [0, 0, 0],
+			"to": [16, 5, 16],
 			"faces": {
 				"down": {"uv": [0, 0, 8, 8], "texture": "#0"}
 			}
 		},
 		{
-			"from": [-0.25, 9.75, -0.25],
-			"to": [16.25, 13.25, 16.25],
-			"rotation": {"angle": 0, "axis": "y", "origin": [0, 10, 0]},
+			"from": [-0.25, -1.25, -0.25],
+			"to": [16.25, 2.25, 16.25],
+			"rotation": {"angle": 0, "axis": "y", "origin": [0, -1, 0]},
 			"faces": {
 				"north": {"uv": [8, 6.5, 16, 8], "texture": "#0"},
 				"east": {"uv": [8, 6.5, 16, 8], "texture": "#0"},
@@ -46,12 +40,5 @@
 				"down": {"uv": [8, 8, 16, 16], "texture": "#0"}
 			}
 		}
-	],
-	"display": {
-		"gui": {
-			"rotation": [30, -135, 180],
-			"translation": [0, 2, 0],
-			"scale": [0.625, 0.625, 0.625]
-		}
-	}
+	]
 }

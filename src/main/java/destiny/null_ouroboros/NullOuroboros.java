@@ -4,6 +4,9 @@ import com.mojang.logging.LogUtils;
 import destiny.null_ouroboros.client.render.dimension.VergeOfRealityDimensionEffects;
 import destiny.null_ouroboros.client.render.particle.AshParticle;
 import destiny.null_ouroboros.server.registry.*;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.EntityRenderers;
+import net.minecraft.client.renderer.entity.FallingBlockRenderer;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterDimensionSpecialEffectsEvent;
@@ -35,6 +38,7 @@ public class NullOuroboros {
         PacketHandlerRegistry.register();
         BlockEntityRegistry.BLOCK_ENTITIES.register(modEventBus);
         SoundRegistry.SOUNDS.register(modEventBus);
+        EntityRegistry.ENTITY_TYPES.register(modEventBus);
 
         context.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
 
@@ -49,6 +53,9 @@ public class NullOuroboros {
     public static class ClientModEvents {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
+            event.enqueueWork(() ->
+                    EntityRenderers.register(EntityRegistry.FALLING_DROPLIGHT.get(), FallingBlockRenderer::new)
+            );
         }
 
         @SubscribeEvent

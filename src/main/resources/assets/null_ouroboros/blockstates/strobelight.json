@@ -1,0 +1,57 @@
+{
+  "variants": {
+    "facing=up,lit=true": {
+      "model": "null_ouroboros:block/strobelight"
+    },
+    "facing=down,lit=true": {
+      "model": "null_ouroboros:block/strobelight",
+      "x": 180
+    },
+    "facing=north,lit=true": {
+      "model": "null_ouroboros:block/strobelight",
+      "x": 90
+    },
+    "facing=south,lit=true": {
+      "model": "null_ouroboros:block/strobelight",
+      "x": 90,
+      "y": 180
+    },
+    "facing=west,lit=true": {
+      "model": "null_ouroboros:block/strobelight",
+      "x": 90,
+      "y": 270
+    },
+    "facing=east,lit=true": {
+      "model": "null_ouroboros:block/strobelight",
+      "x": 90,
+      "y": 90
+    },
+
+    "facing=up,lit=false": {
+      "model": "null_ouroboros:block/strobelight_off"
+    },
+    "facing=down,lit=false": {
+      "model": "null_ouroboros:block/strobelight_off",
+      "x": 180
+    },
+    "facing=north,lit=false": {
+      "model": "null_ouroboros:block/strobelight_off",
+      "x": 90
+    },
+    "facing=south,lit=false": {
+      "model": "null_ouroboros:block/strobelight_off",
+      "x": 90,
+      "y": 180
+    },
+    "facing=west,lit=false": {
+      "model": "null_ouroboros:block/strobelight_off",
+      "x": 90,
+      "y": 270
+    },
+    "facing=east,lit=false": {
+      "model": "null_ouroboros:block/strobelight_off",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

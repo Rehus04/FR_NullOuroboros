@@ -29,6 +29,8 @@ public class CreativeTabRegistry {
                 output.accept(BlockRegistry.BLACKMETAL_TRUSS.get());
 
                 output.accept(BlockRegistry.DROPLIGHT.get());
+                output.accept(BlockRegistry.BROKEN_DROPLIGHT.get());
+                output.accept(BlockRegistry.STROBELIGHT.get());
             })
             .build()
     );

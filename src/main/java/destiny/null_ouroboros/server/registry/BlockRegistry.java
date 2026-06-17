@@ -59,6 +59,12 @@ public class BlockRegistry {
     public static final RegistryObject<Block> DROPLIGHT = registerBlock("droplight",
             () -> new DroplightBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
                     .mapColor(MapColor.COLOR_GRAY).sound(SoundType.LANTERN).noOcclusion().lightLevel(state -> state.getValue(LIT) ? 12 : 0)));
+    public static final RegistryObject<Block> BROKEN_DROPLIGHT = registerBlock("broken_droplight",
+            () -> new BrokenDroplightBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
+                    .mapColor(MapColor.COLOR_GRAY).sound(SoundType.LANTERN).noOcclusion().lightLevel(state -> state.getValue(LIT) ? 10 : 0).randomTicks()));
+    public static final RegistryObject<Block> STROBELIGHT = registerBlock("strobelight",
+            () -> new StrobelightBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
+                    .mapColor(MapColor.COLOR_GRAY).sound(SoundType.LANTERN).noOcclusion().lightLevel(state -> state.getValue(LIT) ? 8 : 0)));
 
     private static <T extends Block> RegistryObject<T> registerBlock(String name, Supplier<T> block) {
         RegistryObject<T> toReturn = BLOCKS.register(name, block);
