@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import destiny.null_ouroboros.NullOuroboros;
 import destiny.null_ouroboros.client.render.model.MechanicalSirenBlockModel;
-import destiny.null_ouroboros.server.block.StrobelightBlock;
+import destiny.null_ouroboros.server.block.MechanicalSirenBlock;
 import destiny.null_ouroboros.server.block.entity.MechanicalSirenBlockEntity;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -24,38 +24,34 @@ public class MechanicalSirenBlockEntityRenderer implements BlockEntityRenderer<M
     }
 
     @Override
-    public void render(MechanicalSirenBlockEntity mechanicalSirenBlockEntity, float partialTick, PoseStack poseStack, MultiBufferSource buffer, int packedLight, int packedOverlay) {
-        BlockState state = mechanicalSirenBlockEntity.getBlockState();
-        boolean isOn = state.getValue(StrobelightBlock.LIT);
-        Direction facing = state.getValue(StrobelightBlock.FACING);
-
+    public void render(MechanicalSirenBlockEntity be, float partialTick, PoseStack poseStack, MultiBufferSource buffer, int packedLight, int packedOverlay) {
         ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(NullOuroboros.MODID, "textures/block/mechanical_siren.png");
 
         ModelPart bone = this.model.bb_main;
-        float pivotX = bone.x / 16.0f;
-        float pivotY = bone.y / 16.0f;
-        float pivotZ = bone.z / 16.0f;
+        float pivotX = bone.x / 16.0F;
+        float pivotY = bone.y / 16.0F;
+        float pivotZ = bone.z / 16.0F;
 
         poseStack.pushPose();
 
         poseStack.translate(0.5, 0.5, 0.5);
-        poseStack.mulPose(facing.getOpposite().getRotation());
+        poseStack.mulPose(Direction.UP.getOpposite().getRotation());
         poseStack.translate(0.5, 0.5, -0.5);
         poseStack.translate(-pivotX, -pivotY, -pivotZ);
-        poseStack.translate(pivotX, pivotY, pivotZ);
-
-        float angle = mechanicalSirenBlockEntity.getRotationAngle() + mechanicalSirenBlockEntity.getRotationSpeed() * partialTick;
-
-        poseStack.pushPose();
-        poseStack.translate(-0.5, -0.625, 0.5);
-        poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(angle % 360f));
+        poseStack.translate(-0.5, 0, 0.5);
 
         VertexConsumer mainConsumer = buffer.getBuffer(RenderType.entityTranslucent(texture));
+        bone.render(poseStack, mainConsumer, packedLight, packedOverlay);
 
-        this.model.blades.render(poseStack, mainConsumer, packedLight, packedOverlay);
+        poseStack.pushPose();
+
+        ModelPart blades = this.model.blades;
+        float angle = be.getRotationAngle() + be.getRotationSpeed() * partialTick;
+        poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(angle % 360.0F));
+
+        blades.render(poseStack, mainConsumer, packedLight, packedOverlay);
 
         poseStack.popPose();
-
         poseStack.popPose();
     }
 

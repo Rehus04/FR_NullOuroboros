@@ -3,6 +3,7 @@ package destiny.null_ouroboros.server.entity;
 import destiny.null_ouroboros.server.registry.BlockRegistry;
 import destiny.null_ouroboros.server.registry.SoundRegistry;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MoverType;
@@ -12,7 +13,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.Dictionary;
+
 import static destiny.null_ouroboros.server.block.BrokenDroplightBlock.ACTIVE;
+import static destiny.null_ouroboros.server.block.BrokenDroplightBlock.LYING;
 import static destiny.null_ouroboros.server.block.DroplightBlock.*;
 
 public class FallingDroplightBlockEntity extends FallingBlockEntity {
@@ -59,6 +63,10 @@ public class FallingDroplightBlockEntity extends FallingBlockEntity {
             BlockState state = this.getBlockState();
             BlockState brokenState = BlockRegistry.BROKEN_DROPLIGHT.get().defaultBlockState().setValue(FACING, state.getValue(FACING))
                     .setValue(LIT, state.getValue(LIT)).setValue(POWERED, state.getValue(POWERED)).setValue(ACTIVE, state.getValue(LIT));
+
+            if (brokenState.getValue(FACING) == Direction.UP) {
+                brokenState = brokenState.setValue(LYING, true);
+            }
 
             level.setBlock(this.blockPosition(), brokenState, 3);
 

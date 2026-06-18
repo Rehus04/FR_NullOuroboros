@@ -2,9 +2,11 @@ package destiny.null_ouroboros.server.block;
 
 import destiny.null_ouroboros.server.block.entity.MechanicalSirenBlockEntity;
 import destiny.null_ouroboros.server.registry.BlockEntityRegistry;
+import destiny.null_ouroboros.server.util.ModUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
@@ -16,30 +18,43 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 public class MechanicalSirenBlock extends BaseEntityBlock {
     public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
-    public static final BooleanProperty LIT = BlockStateProperties.LIT;
+    public static final BooleanProperty ACTIVE = BooleanProperty.create("active");
+
+    public static final VoxelShape SHAPE = ModUtil.buildShape(
+            Block.box(0, 5, 0, 16, 10, 16),
+            Block.box(5, 0, 5, 11, 5, 11),
+            Block.box(3, 10, 3, 13, 12, 13)
+    );
 
     public MechanicalSirenBlock(Properties properties) {
         super(properties);
-        this.registerDefaultState(this.defaultBlockState().setValue(POWERED, false).setValue(LIT, false));
+        this.registerDefaultState(this.defaultBlockState().setValue(POWERED, false).setValue(ACTIVE, false));
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(POWERED, LIT);
+        builder.add(POWERED, ACTIVE);
     }
 
     @Override
-    public RenderShape getRenderShape(BlockState p_49232_) {
+    public VoxelShape getShape(BlockState state, BlockGetter getter, BlockPos pos, CollisionContext context) {
+        return SHAPE;
+    }
+
+    @Override
+    public RenderShape getRenderShape(BlockState state) {
         return RenderShape.INVISIBLE;
     }
 
     @Override
     public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
-        return this.defaultBlockState().setValue(POWERED, false).setValue(LIT, false);
+        return this.defaultBlockState().setValue(POWERED, false).setValue(ACTIVE, false);
     }
 
     @Override
@@ -64,7 +79,7 @@ public class MechanicalSirenBlock extends BaseEntityBlock {
             BlockState newState = state;
 
             if (!wasPowered) {
-                newState = newState.cycle(LIT);
+                newState = newState.cycle(ACTIVE);
             }
 
             level.setBlock(pos, newState.setValue(POWERED, hasPower), 3);

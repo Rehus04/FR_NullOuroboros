@@ -1,6 +1,6 @@
 package destiny.null_ouroboros.server.block.entity;
 
-import destiny.null_ouroboros.server.block.StrobelightBlock;
+import destiny.null_ouroboros.server.block.MechanicalSirenBlock;
 import destiny.null_ouroboros.server.registry.BlockEntityRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -15,7 +15,7 @@ public class MechanicalSirenBlockEntity extends BlockEntity {
     private static final float MAX_RPM = 120f;
     private static final float MAX_SPEED = MAX_RPM * 360f / 60f / 20f;
     private static final float ACCELERATION = MAX_SPEED / (3f * 20f);
-    private static final float DECELERATION = MAX_SPEED / (5f * 20f);
+    private static final float DECELERATION = MAX_SPEED / (8f * 20f);
 
     private float rotationAngle = 0f;
     private float rotationSpeed = 0f;
@@ -36,8 +36,8 @@ public class MechanicalSirenBlockEntity extends BlockEntity {
     }
 
     public static void tick(Level level, BlockPos pos, BlockState state, MechanicalSirenBlockEntity mechanicalSirenBlockEntity) {
-        boolean lit = state.getValue(StrobelightBlock.LIT);
-        float targetSpeed = lit ? MAX_SPEED : 0f;
+        boolean active = state.getValue(MechanicalSirenBlock.ACTIVE);
+        float targetSpeed = active ? MAX_SPEED : 0f;
 
         if (mechanicalSirenBlockEntity.rotationSpeed < targetSpeed) {
             mechanicalSirenBlockEntity.rotationSpeed = Math.min(mechanicalSirenBlockEntity.rotationSpeed + ACCELERATION, targetSpeed);

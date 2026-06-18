@@ -27,13 +27,14 @@ public class BrokenDroplightBlock extends FallingBlock {
     public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
     public static final BooleanProperty ACTIVE = BooleanProperty.create("active");
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
+    public static final BooleanProperty LYING = BooleanProperty.create("lying");
 
-    public static final VoxelShape UP    = ModUtil.buildShape(Block.box(0, 11, 0, 16, 16, 16));
-    public static final VoxelShape DOWN  = ModUtil.buildShape(Block.box(0,  0, 0, 16,  5, 16));
+    public static final VoxelShape UP = ModUtil.buildShape(Block.box(0, 11, 0, 16, 16, 16));
+    public static final VoxelShape DOWN = ModUtil.buildShape(Block.box(0,  0, 0, 16,  5, 16));
     public static final VoxelShape NORTH = ModUtil.buildShape(Block.box(0,  0, 0, 16, 16,  5));
     public static final VoxelShape SOUTH = ModUtil.buildShape(Block.box(0,  0, 11,16, 16, 16));
-    public static final VoxelShape WEST  = ModUtil.buildShape(Block.box(0,  0, 0,  5, 16, 16));
-    public static final VoxelShape EAST  = ModUtil.buildShape(Block.box(11, 0, 0, 16, 16, 16));
+    public static final VoxelShape WEST = ModUtil.buildShape(Block.box(0,  0, 0,  5, 16, 16));
+    public static final VoxelShape EAST = ModUtil.buildShape(Block.box(11, 0, 0, 16, 16, 16));
 
     private static final int FLICKER_CHECK_DELAY_MIN = 20;
     private static final int FLICKER_CHECK_DELAY_MAX = 60;
@@ -44,18 +45,18 @@ public class BrokenDroplightBlock extends FallingBlock {
     public BrokenDroplightBlock(Properties properties) {
         super(properties);
         this.registerDefaultState(this.defaultBlockState().setValue(FACING, Direction.UP).setValue(POWERED, false).setValue(ACTIVE, false)
-                .setValue(LIT, false));
+                .setValue(LIT, false).setValue(LYING, false));
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING, POWERED, ACTIVE, LIT);
+        builder.add(FACING, POWERED, ACTIVE, LIT, LYING);
     }
 
     @Override
     public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
         return this.defaultBlockState().setValue(FACING, context.getClickedFace().getOpposite()).setValue(POWERED, false)
-                .setValue(ACTIVE, false).setValue(LIT, false);
+                .setValue(ACTIVE, false).setValue(LIT, false).setValue(LYING, false);
     }
 
     @Override
@@ -158,6 +159,11 @@ public class BrokenDroplightBlock extends FallingBlock {
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter getter, BlockPos pos, CollisionContext context) {
         Direction facing = state.getValue(FACING);
+        boolean lying = state.getValue(LYING);
+
+        if (facing == Direction.UP && lying) {
+            return DOWN;
+        }
 
         return switch (facing) {
             case UP    -> UP;

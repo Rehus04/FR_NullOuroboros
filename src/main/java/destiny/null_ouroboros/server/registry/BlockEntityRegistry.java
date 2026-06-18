@@ -12,5 +12,5 @@ public class BlockEntityRegistry {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, NullOuroboros.MODID);
 
     public static final RegistryObject<BlockEntityType<StrobelightBlockEntity>> STROBELIGHT_BLOCK_ENTITY = BLOCK_ENTITIES.register("strobelight", () -> BlockEntityType.Builder.of(StrobelightBlockEntity::new, BlockRegistry.STROBELIGHT.get()).build(null));
-    public static final RegistryObject<BlockEntityType<MechanicalSirenBlockEntity>> MECHANICAL_SIREN_BLOCK_ENTITY = BLOCK_ENTITIES.register("mechanical_siren", () -> BlockEntityType.Builder.of(MechanicalSirenBlockEntity::new, BlockRegistry.STROBELIGHT.get()).build(null));
+    public static final RegistryObject<BlockEntityType<MechanicalSirenBlockEntity>> MECHANICAL_SIREN_BLOCK_ENTITY = BLOCK_ENTITIES.register("mechanical_siren", () -> BlockEntityType.Builder.of(MechanicalSirenBlockEntity::new, BlockRegistry.MECHANICAL_SIREN.get()).build(null));
 }
