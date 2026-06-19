@@ -3,12 +3,14 @@ package destiny.null_ouroboros.server.event;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
 import destiny.null_ouroboros.client.render.dimension.VergeOfRealityDimensionEffects;
+import destiny.null_ouroboros.client.sound.ManifoldingSoundManager;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.lwjgl.opengl.GL11;
@@ -50,5 +52,10 @@ public class ClientEvents {
 
             GL11.glDisable(GL_DEPTH_CLAMP);
         }
+    }
+
+    @SubscribeEvent
+    public static void onClientTick(TickEvent.ClientTickEvent event) {
+        ManifoldingSoundManager.tick(event);
     }
 }

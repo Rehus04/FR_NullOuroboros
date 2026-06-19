@@ -33,5 +33,59 @@
         "stream": true
       }
     ]
+  },
+  "manifolding_start": {
+    "subtitle": "subtitle.null_ouroboros.manifolding_start",
+    "sounds": [
+      {
+        "name": "null_ouroboros:manifolding_start",
+        "stream": true
+      }
+    ]
+  },
+  "manifolding_loop": {
+    "subtitle": "subtitle.null_ouroboros.manifolding_loop",
+    "sounds": [
+      {
+        "name": "null_ouroboros:manifolding_loop",
+        "stream": true
+      }
+    ]
+  },
+  "manifolding_end": {
+    "subtitle": "subtitle.null_ouroboros.manifolding_end",
+    "sounds": [
+      {
+        "name": "null_ouroboros:manifolding_end",
+        "stream": true
+      }
+    ]
+  },
+  "manifolding_start_muffled": {
+    "subtitle": "subtitle.null_ouroboros.manifolding_start_muffled",
+    "sounds": [
+      {
+        "name": "null_ouroboros:manifolding_start_muffled",
+        "stream": true
+      }
+    ]
+  },
+  "manifolding_loop_muffled": {
+    "subtitle": "subtitle.null_ouroboros.manifolding_loop_muffled",
+    "sounds": [
+      {
+        "name": "null_ouroboros:manifolding_loop_muffled",
+        "stream": true
+      }
+    ]
+  },
+  "manifolding_end_muffled": {
+    "subtitle": "subtitle.null_ouroboros.manifolding_end_muffled",
+    "sounds": [
+      {
+        "name": "null_ouroboros:manifolding_end_muffled",
+        "stream": true
+      }
+    ]
   }
 }

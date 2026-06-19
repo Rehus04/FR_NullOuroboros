@@ -1,6 +1,7 @@
 package destiny.null_ouroboros.server.registry;
 
 import destiny.null_ouroboros.NullOuroboros;
+import destiny.null_ouroboros.client.network.ClientBoundManifoldingPacket;
 import destiny.null_ouroboros.client.network.ClientBoundParticlePacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkDirection;
@@ -22,6 +23,12 @@ public class PacketHandlerRegistry {
                 .encoder(ClientBoundParticlePacket::encode)
                 .decoder(ClientBoundParticlePacket::decode)
                 .consumerMainThread(ClientBoundParticlePacket::handle)
+                .add();
+
+        INSTANCE.messageBuilder(ClientBoundManifoldingPacket.class, index++, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(ClientBoundManifoldingPacket::encode)
+                .decoder(ClientBoundManifoldingPacket::new)
+                .consumerMainThread(ClientBoundManifoldingPacket::handle)
                 .add();
     }
 }

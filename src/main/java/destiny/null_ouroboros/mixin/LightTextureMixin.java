@@ -2,6 +2,7 @@ package destiny.null_ouroboros.mixin;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import destiny.null_ouroboros.client.render.dimension.VergeOfRealityDimensionEffects;
+import destiny.null_ouroboros.server.capability.ClientManifoldingHolder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LightTexture;
@@ -17,44 +18,36 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LightTexture.class)
 public class LightTextureMixin {
-    @Shadow @Final
+    @Shadow
+    @Final
     private DynamicTexture lightTexture;
-    @Shadow @Final
+    @Shadow
+    @Final
     private NativeImage lightPixels;
 
-    @Inject(
-            method = "updateLightTexture(F)V",
-            at = @At("TAIL")
-    )
+    @Inject(method = "updateLightTexture(F)V", at = @At("TAIL"))
     private void nullOuroboros$vergeLightMap(float partialTick, CallbackInfo ci) {
         Minecraft minecraft = Minecraft.getInstance();
         ClientLevel level = minecraft.level;
 
-        if (level == null) return;
+        if (level == null || !VergeOfRealityDimensionEffects.isVergeOfReality(level)) return;
 
-        if (!VergeOfRealityDimensionEffects.isVergeOfReality(level)) return;
+        float lightDim = ClientManifoldingHolder.getLightDim();
+        float surfaceBrightness = 0.3f * (1.0f - lightDim);
 
         DimensionType dimensionType = level.dimensionType();
 
-        final float surfaceSkyBrightness = 0f;
-
         for (int skyLight = 0; skyLight < 16; skyLight++) {
-            float skyContribution = surfaceSkyBrightness * (skyLight / 15f);
+            float skyContribution = surfaceBrightness * (skyLight / 15f);
 
             for (int blockLight = 0; blockLight < 16; blockLight++) {
                 float blockContribution = LightTexture.getBrightness(dimensionType, blockLight);
-
                 float brightness = Mth.clamp(skyContribution + blockContribution, 0f, 1f);
-
                 int value = (int) (brightness * 255f);
 
-                lightPixels.setPixelRGBA(
-                        blockLight,
-                        skyLight,
-                        0xFF000000 | (value << 16) | (value << 8) | value
-                );
-                lightTexture.upload();
+                lightPixels.setPixelRGBA(blockLight, skyLight, 0xFF000000 | (value << 16) | (value << 8) | value);
             }
         }
+        lightTexture.upload();
     }
 }
