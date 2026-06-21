@@ -36,6 +36,8 @@ public class CreativeTabRegistry {
 
                 output.accept(BlockRegistry.MANIFOLDING_LABEL.get());
                 output.accept(ItemRegistry.BURROW_BEACON.get());
+
+                output.accept(BlockRegistry.DUSTY_COMPUTER.get());
             })
             .build()
     );

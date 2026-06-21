@@ -15,6 +15,7 @@ import net.minecraftforge.registries.RegistryObject;
 import java.util.function.Supplier;
 
 import static destiny.null_ouroboros.server.block.DroplightBlock.LIT;
+import static destiny.null_ouroboros.server.block.DroplightBlock.POWERED;
 
 public class BlockRegistry {
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, NullOuroboros.MODID);
@@ -75,6 +76,10 @@ public class BlockRegistry {
     public static final RegistryObject<Block> TEMPORAL_SURGE_DETECTOR = registerBlock("temporal_surge_detector",
             () -> new TemporalSurgeDetectorBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
                     .mapColor(MapColor.COLOR_GRAY).sound(SoundType.LANTERN).noOcclusion()));
+
+    public static final RegistryObject<Block> DUSTY_COMPUTER = registerBlock("dusty_computer",
+            () -> new DustyComputerBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
+                    .mapColor(MapColor.COLOR_GRAY).sound(SoundType.LANTERN).noOcclusion().lightLevel(state -> state.getValue(POWERED) ? 6 : 0)));
 
     private static <T extends Block> RegistryObject<T> registerBlock(String name, Supplier<T> block) {
         RegistryObject<T> toReturn = BLOCKS.register(name, block);

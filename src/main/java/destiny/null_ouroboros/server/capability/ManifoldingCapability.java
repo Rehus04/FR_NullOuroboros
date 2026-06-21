@@ -45,25 +45,25 @@ public class ManifoldingCapability implements INBTSerializable<CompoundTag> {
     private static final String POST_EVENT_DURATION = "post_event_duration";
     private static final String WIND_ANGLE = "wind_angle";
 
-    private static final TagKey<Block> IGNORED_BLOCKS = BlockTags.create(ResourceLocation.fromNamespaceAndPath(NullOuroboros.MODID, "ignored_by_manifolding_wind"));
+    public static final TagKey<Block> IGNORED_BLOCKS = BlockTags.create(ResourceLocation.fromNamespaceAndPath(NullOuroboros.MODID, "ignored_by_manifolding_wind"));
 
-    private static final int SIREN_RADIUS = 256;
-    private static final float WIND_PUSH_FORCE = 0.3f;
-    private static final int DAMAGE_INTERVAL = 20;
+    public static final int SIREN_RADIUS = 256;
+    public static final float WIND_PUSH_FORCE = 0.3f;
+    public static final int DAMAGE_INTERVAL = 20;
 
-    private static final int CLEAR_DELAY_MIN = 1 * 60 * 20;
-    private static final int CLEAR_DELAY_MAX = 1 * 60 * 20;
-    private static final int PRE_EVENT_MIN = 20 * 20;
-    private static final int PRE_EVENT_MAX = 20 * 20;
-    private static final int ACTIVE_MIN = 60 * 20;
-    private static final int ACTIVE_MAX = 60 * 20;
-    private static final int POST_EVENT_MIN = 20 * 20;
-    private static final int POST_EVENT_MAX = 20 * 20;
-    private static final int THUNDER_DELAY_MIN = 1 * 20;
-    private static final int THUNDER_DELAY_MAX = 7 * 20;
+    public static final int CLEAR_DELAY_MIN = 1 * 60 * 20;
+    public static final int CLEAR_DELAY_MAX = 1 * 60 * 20;
+    public static final int PRE_EVENT_MIN = 20 * 20;
+    public static final int PRE_EVENT_MAX = 20 * 20;
+    public static final int ACTIVE_MIN = 60 * 20;
+    public static final int ACTIVE_MAX = 60 * 20;
+    public static final int POST_EVENT_MIN = 20 * 20;
+    public static final int POST_EVENT_MAX = 20 * 20;
+    public static final int THUNDER_DELAY_MIN = 1 * 20;
+    public static final int THUNDER_DELAY_MAX = 7 * 20;
 
     public static final double BEACON_PROTECTION_RANGE = 8;
-    private static final float BEACON_PUSH_MULTIPLIER = 0.05f;
+    public static final float BEACON_PUSH_MULTIPLIER = 0.05f;
 
     private ManifoldingPhase phase = ManifoldingPhase.CLEAR;
     private int timeUntilNextEvent = 0;
