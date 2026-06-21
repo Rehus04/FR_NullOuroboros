@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
-import static destiny.null_ouroboros.client.render.particle.AshParticle.BEACON_RADIUS;
+import static destiny.null_ouroboros.server.capability.ManifoldingCapability.BEACON_PROTECTION_RANGE;
 
 @Mixin(Particle.class)
 public class ParticleMixin {
@@ -74,8 +74,8 @@ public class ParticleMixin {
         if (level == null) return false;
         Particle self = (Particle)(Object)this;
 
-        for (BurrowBeaconEntity beacon : level.getEntitiesOfClass(BurrowBeaconEntity.class, self.getBoundingBox().inflate(BEACON_RADIUS))) {
-            if (beacon.distanceToSqr(this.x, this.y, this.z) <= BEACON_RADIUS * BEACON_RADIUS) {
+        for (BurrowBeaconEntity beacon : level.getEntitiesOfClass(BurrowBeaconEntity.class, self.getBoundingBox().inflate(BEACON_PROTECTION_RANGE))) {
+            if (beacon.distanceToSqr(this.x, this.y, this.z) <= BEACON_PROTECTION_RANGE * BEACON_PROTECTION_RANGE) {
                 return true;
             }
         }

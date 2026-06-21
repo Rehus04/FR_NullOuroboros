@@ -2,6 +2,7 @@ package destiny.null_ouroboros.client.render;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 
 public class RenderTypeRegistry extends RenderType {
@@ -19,6 +20,17 @@ public class RenderTypeRegistry extends RenderType {
                     .setOverlayState(RenderType.NO_OVERLAY)
                     .setLayeringState(RenderType.VIEW_OFFSET_Z_LAYERING)
                     .setOutputState(RenderType.ITEM_ENTITY_TARGET)
+                    .createCompositeState(false)
+    );
+
+    public static final RenderType TETHER_RENDER_TYPE = RenderType.create("tether", DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS,
+            256, false, true,
+            RenderType.CompositeState.builder()
+                    .setShaderState(RenderStateShard.POSITION_COLOR_SHADER)
+                    .setWriteMaskState(RenderStateShard.COLOR_DEPTH_WRITE)
+                    .setTransparencyState(RenderStateShard.ADDITIVE_TRANSPARENCY)
+                    .setLightmapState(RenderStateShard.NO_LIGHTMAP)
+                    .setOverlayState(RenderStateShard.NO_OVERLAY)
                     .createCompositeState(false)
     );
 }

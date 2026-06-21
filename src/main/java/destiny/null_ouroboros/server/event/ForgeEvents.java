@@ -32,17 +32,6 @@ public class ForgeEvents {
     }
 
     @SubscribeEvent
-    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) return;
-
-        if (event.player.level() instanceof ServerLevel serverLevel) {
-            serverLevel.getCapability(CapabilityRegistry.MANIFOLDING_CAPABILITY).ifPresent(cap -> {
-                cap.applyWindToEntity(event.player, serverLevel);
-            });
-        }
-    }
-
-    @SubscribeEvent
     public static void onLevelLoad(LevelEvent.Load event) {
         if (event.getLevel() instanceof ServerLevel level) {
             if (level.dimension().location().equals(ManifoldingCapability.DIMENSION_ID)) {

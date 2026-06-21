@@ -16,8 +16,6 @@ public class AshParticle extends TextureSheetParticle {
     private final float rollOffset;
     private final double baseYd;
 
-    public static final double BEACON_RADIUS = 4.0;
-
     public AshParticle(ClientLevel level, double x, double y, double z, SpriteSet sprite, double xSpeed, double ySpeed, double zSpeed) {
         super(level, x, y, z, 0.0D, 0.0D, 0.0D);
         this.sprites = sprite;
@@ -83,10 +81,8 @@ public class AshParticle extends TextureSheetParticle {
     }
 
     private boolean isNearBurrowBeacon() {
-        for (BurrowBeaconEntity beacon : this.level.getEntitiesOfClass(
-                BurrowBeaconEntity.class,
-                this.getBoundingBox().inflate(BEACON_PROTECTION_RANGE))) {
-            if (beacon.distanceToSqr(this.x, this.y, this.z) <= BEACON_RADIUS * BEACON_RADIUS) {
+        for (BurrowBeaconEntity beacon : this.level.getEntitiesOfClass(BurrowBeaconEntity.class, this.getBoundingBox().inflate(BEACON_PROTECTION_RANGE))) {
+            if (beacon.distanceToSqr(this.x, this.y, this.z) <= BEACON_PROTECTION_RANGE * BEACON_PROTECTION_RANGE) {
                 return true;
             }
         }

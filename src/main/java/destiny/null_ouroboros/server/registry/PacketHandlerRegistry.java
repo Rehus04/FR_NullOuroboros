@@ -47,5 +47,11 @@ public class PacketHandlerRegistry {
                 .decoder(ClientBoundSirenSoundPacket::decode)
                 .consumerMainThread(ClientBoundSirenSoundPacket::handle)
                 .add();
+
+        INSTANCE.messageBuilder(ClientBoundBurrowBeaconSyncPacket.class, index++, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(ClientBoundBurrowBeaconSyncPacket::encode)
+                .decoder(ClientBoundBurrowBeaconSyncPacket::decode)
+                .consumerMainThread(ClientBoundBurrowBeaconSyncPacket::handle)
+                .add();
     }
 }

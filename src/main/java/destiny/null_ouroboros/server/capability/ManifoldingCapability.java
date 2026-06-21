@@ -48,7 +48,7 @@ public class ManifoldingCapability implements INBTSerializable<CompoundTag> {
     private static final TagKey<Block> IGNORED_BLOCKS = BlockTags.create(ResourceLocation.fromNamespaceAndPath(NullOuroboros.MODID, "ignored_by_manifolding_wind"));
 
     private static final int SIREN_RADIUS = 256;
-    private static final float WIND_PUSH_FORCE = 05f;
+    private static final float WIND_PUSH_FORCE = 0.3f;
     private static final int DAMAGE_INTERVAL = 20;
 
     private static final int CLEAR_DELAY_MIN = 1 * 60 * 20;
@@ -62,8 +62,8 @@ public class ManifoldingCapability implements INBTSerializable<CompoundTag> {
     private static final int THUNDER_DELAY_MIN = 1 * 20;
     private static final int THUNDER_DELAY_MAX = 7 * 20;
 
-    public static final double BEACON_PROTECTION_RANGE = 4;
-    private static final float BEACON_PUSH_MULTIPLIER = 0.2f;
+    public static final double BEACON_PROTECTION_RANGE = 12;
+    private static final float BEACON_PUSH_MULTIPLIER = 0.05f;
 
     private ManifoldingPhase phase = ManifoldingPhase.CLEAR;
     private int timeUntilNextEvent = 0;
@@ -265,13 +265,11 @@ public class ManifoldingCapability implements INBTSerializable<CompoundTag> {
         for (Entity entity : level.getEntities().getAll()) {
             if (!level.isLoaded(entity.blockPosition())) continue;
 
+            applyWindToEntity(entity, level);
+
             if (entity instanceof LivingEntity living) {
                 damageIfExposed(living, level);
             }
-
-            if (entity instanceof Player) continue;
-
-            applyWindToEntity(entity, level);
         }
     }
 
@@ -345,7 +343,9 @@ public class ManifoldingCapability implements INBTSerializable<CompoundTag> {
 
         if (hit.getType() == HitResult.Type.MISS) {
             Vec3 velocity = entity.getDeltaMovement();
-            entity.setDeltaMovement(velocity.x + direction.x * effectivePush, velocity.y, velocity.z + direction.z * effectivePush);
+            double newX = velocity.x + direction.x * effectivePush;
+            double newZ = velocity.z + direction.z * effectivePush;
+            entity.setDeltaMovement(newX, velocity.y, newZ);
             entity.hurtMarked = true;
         }
     }
@@ -447,8 +447,8 @@ public class ManifoldingCapability implements INBTSerializable<CompoundTag> {
         double windDirX = -Math.sin(windRad);
         double windDirZ = Math.cos(windRad);
 
-        double offsetX = -windDirX * windStrength * 16;
-        double offsetZ = -windDirZ * windStrength * 16;
+        double offsetX = -windDirX * windStrength * 16.0;
+        double offsetZ = -windDirZ * windStrength * 16.0;
 
         for (Player player : level.players()) {
             int count = Math.max(1, (int)(windStrength * 64));
@@ -467,8 +467,8 @@ public class ManifoldingCapability implements INBTSerializable<CompoundTag> {
                 double wz = windDirZ * windStrength * 0.25;
 
                 PacketHandlerRegistry.INSTANCE.send(
-                        PacketDistributor.NEAR.with(() -> new PacketDistributor.TargetPoint(x, y, z, 32, level.dimension())),
-                        new ClientBoundParticlePacket(ParticleTypeRegistry.ASH.getId(), x, y, z, wx, 0, wz, 1)
+                        PacketDistributor.NEAR.with(() -> new PacketDistributor.TargetPoint(x, y, z, 32.0, level.dimension())),
+                        new ClientBoundParticlePacket(ParticleTypeRegistry.ASH.getId(), x, y, z, wx, 0.0, wz, 1)
                 );
             }
         }
