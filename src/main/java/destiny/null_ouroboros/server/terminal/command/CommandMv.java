@@ -15,21 +15,20 @@ public class CommandMv extends TerminalCommand {
     @Override
     public void execute() {
         if (args.isEmpty()) {
-            println("Usage: mv <source> <destination directory>");
+            printlnTranslatable("message.null_ouroboros.terminus.mv.usage");
             return;
         }
         String[] parts = args.split("\\s+", 2);
         if (parts.length < 2) {
-            println("Missing destination.");
+            printlnTranslatable("message.null_ouroboros.terminus.mv.missing_destination");
             return;
         }
         String sourcePath = parts[0];
         String destDirPath = parts[1];
         try {
             fs.move(sourcePath, destDirPath);
-            println("Moved " + sourcePath + " to " + destDirPath);
         } catch (FileSystemException e) {
-            println("Error: " + e.getMessage());
+            printlnError(e);
         }
     }
 }

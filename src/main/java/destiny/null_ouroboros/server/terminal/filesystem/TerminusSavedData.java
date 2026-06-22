@@ -36,13 +36,6 @@ public class TerminusSavedData extends SavedData {
         return serverLevel.getDataStorage().computeIfAbsent(TerminusSavedData::load, TerminusSavedData::new, DATA_NAME);
     }
 
-    public TerminusFileSystem getOrCreate(UUID uuid) {
-        return fileSystems.computeIfAbsent(uuid, id -> {
-            setDirty();
-            return new TerminusFileSystem();
-        });
-    }
-
     public void remove(UUID uuid) {
         fileSystems.remove(uuid);
         setDirty();

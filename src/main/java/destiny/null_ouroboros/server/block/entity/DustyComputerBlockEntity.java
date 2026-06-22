@@ -1,12 +1,14 @@
 package destiny.null_ouroboros.server.block.entity;
 
 import destiny.null_ouroboros.client.sound.DustyComputerLoopingSound;
+import destiny.null_ouroboros.client.network.ClientBoundDustyComputerSyncPacket;
 import destiny.null_ouroboros.server.block.DustyComputerBlock;
 import destiny.null_ouroboros.server.menu.DustyComputerMenu;
 import destiny.null_ouroboros.server.registry.BlockEntityRegistry;
 import destiny.null_ouroboros.server.registry.SoundRegistry;
 import destiny.null_ouroboros.server.terminal.TerminusSession;
 import destiny.null_ouroboros.server.terminal.filesystem.TerminusSavedData;
+import destiny.null_ouroboros.server.terminal.filesystem.TerminusFileSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -35,12 +37,18 @@ public class DustyComputerBlockEntity extends BlockEntity implements MenuProvide
     private final List<String> lines = new ArrayList<>();
     private String currentPath = "T:\\";
 
+    private ClientBoundDustyComputerSyncPacket.FileSessionType fileSessionType =
+            ClientBoundDustyComputerSyncPacket.FileSessionType.NONE;
+    private String fileSessionContent = "";
+    private String fileSessionPath = "";
+
     private DustyComputerLoopingSound loopingSound;
 
     @Nullable
     private UUID currentUserId = null;
     @Nullable
     private UUID filesystemId = null;
+    private long poweredOnGameTime = -1L;
 
     public DustyComputerBlockEntity(BlockPos pos, BlockState state) {
         super(BlockEntityRegistry.DUSTY_COMPUTER_BLOCK_ENTITY.get(), pos, state);
@@ -97,6 +105,25 @@ public class DustyComputerBlockEntity extends BlockEntity implements MenuProvide
         this.currentPath = path;
     }
 
+    public ClientBoundDustyComputerSyncPacket.FileSessionType getFileSessionType() {
+        return fileSessionType;
+    }
+
+    public String getFileSessionContent() {
+        return fileSessionContent;
+    }
+
+    public String getFileSessionPath() {
+        return fileSessionPath;
+    }
+
+    public void setFileSessionState(ClientBoundDustyComputerSyncPacket.FileSessionType type,
+                                   String content, String path) {
+        this.fileSessionType = type != null ? type : ClientBoundDustyComputerSyncPacket.FileSessionType.NONE;
+        this.fileSessionContent = content != null ? content : "";
+        this.fileSessionPath = path != null ? path : "";
+    }
+
     @Nullable
     public UUID getFilesystemId() {
         return filesystemId;
@@ -105,6 +132,18 @@ public class DustyComputerBlockEntity extends BlockEntity implements MenuProvide
     public void setFilesystemId(UUID id) {
         this.filesystemId = id;
         setChanged();
+    }
+
+    public long getPoweredOnGameTime() {
+        return poweredOnGameTime;
+    }
+
+    public void markPoweredOn(long gameTime) {
+        this.poweredOnGameTime = gameTime;
+    }
+
+    public void clearPoweredOn() {
+        this.poweredOnGameTime = -1L;
     }
 
     public boolean tryClaim(UUID userId) {
@@ -118,10 +157,44 @@ public class DustyComputerBlockEntity extends BlockEntity implements MenuProvide
         if (filesystemId != null) {
             TerminusSavedData data = TerminusSavedData.get(level);
             if (data != null) {
-                data.getOrCreateSession(filesystemId, worldPosition).setPlayerId(userId);
+                TerminusSession session = data.getOrCreateSession(filesystemId, worldPosition);
+                session.setPlayerId(userId);
+                session.syncFromFileSystem(data.getOrCreateFileSystem(filesystemId));
             }
         }
         return true;
+    }
+
+    public void syncSessionToPlayer(ServerPlayer player) {
+        if (level == null || level.isClientSide || filesystemId == null) return;
+        TerminusSavedData data = TerminusSavedData.get(level);
+        if (data == null) return;
+        TerminusSession session = data.getOrCreateSession(filesystemId, worldPosition);
+        TerminusFileSystem fs = data.getOrCreateFileSystem(filesystemId);
+        session.syncFromFileSystem(fs);
+        session.setPlayerId(player.getUUID());
+        session.syncToClient(player, fs);
+    }
+
+    public void closeFileSession(@Nullable String contentToSave, ServerPlayer player) {
+        if (level == null || level.isClientSide) return;
+        if (filesystemId == null) return;
+        if (currentUserId == null || !currentUserId.equals(player.getUUID())) return;
+
+        TerminusSavedData data = TerminusSavedData.get(level);
+        if (data == null) return;
+        TerminusSession session = data.getOrCreateSession(filesystemId, worldPosition);
+        if (!session.isInFileSession()) return;
+
+        TerminusFileSystem fs = data.getOrCreateFileSystem(filesystemId);
+        session.closeFileSession(fs, contentToSave);
+
+        if (fs.isDirty()) {
+            data.setDirty();
+            fs.clearDirty();
+        }
+
+        session.syncToClient(player, fs);
     }
 
     public void unclaim(UUID userId) {
@@ -146,10 +219,22 @@ public class DustyComputerBlockEntity extends BlockEntity implements MenuProvide
         if (data == null) return;
         TerminusSession session = data.getOrCreateSession(filesystemId, worldPosition);
 
-        session.setPlayerId(player.getUUID());
-        session.processCommand(rawLine, data.getOrCreateFileSystem(filesystemId));
+        TerminusFileSystem fs = data.getOrCreateFileSystem(filesystemId);
 
-        session.syncToClient(player);
+        session.setPlayerId(player.getUUID());
+        session.processCommand(rawLine, fs);
+
+        if (fs.isDirty()) {
+            data.setDirty();
+            fs.clearDirty();
+        }
+
+        session.syncToClient(player, fs);
+
+        if (session.consumeShutdownRequest()) {
+            shutdown();
+            player.closeContainer();
+        }
     }
 
     public void clearTerminal() {
@@ -158,13 +243,26 @@ public class DustyComputerBlockEntity extends BlockEntity implements MenuProvide
         TerminusSavedData data = TerminusSavedData.get(level);
         if (data == null) return;
         TerminusSession session = data.getOrCreateSession(filesystemId, worldPosition);
+        if (session.getActiveCommand() != null) {
+            session.getActiveCommand().cancel();
+            session.clearActiveCommand();
+        }
         session.clearLines();
+
+        TerminusFileSystem fs = data.getOrCreateFileSystem(filesystemId);
+        session.cancelFileSession(fs);
+        fs.setCurrentDirectory(fs.getRoot());
+        session.syncFromFileSystem(fs);
+        if (fs.isDirty()) {
+            data.setDirty();
+            fs.clearDirty();
+        }
 
         if (currentUserId != null && level instanceof ServerLevel serverLevel) {
             Player player = serverLevel.getPlayerByUUID(currentUserId);
             if (player instanceof ServerPlayer serverPlayer) {
                 session.setPlayerId(currentUserId);
-                session.syncToClient(serverPlayer);
+                session.syncToClient(serverPlayer, fs);
             }
         }
     }
@@ -178,15 +276,18 @@ public class DustyComputerBlockEntity extends BlockEntity implements MenuProvide
                 TerminusSavedData data = TerminusSavedData.get(level);
                 if (data != null) {
                     TerminusSession session = data.getOrCreateSession(filesystemId, worldPosition);
+                    TerminusFileSystem fs = data.getOrCreateFileSystem(filesystemId);
                     if (session.getActiveCommand() != null) {
                         session.getActiveCommand().cancel();
                         session.clearActiveCommand();
                     }
+                    session.cancelFileSession(fs);
                     session.setPlayerId(null);
                 }
             }
             level.setBlock(worldPosition, state.setValue(DustyComputerBlock.POWERED, false), 3);
             level.playSound(null, worldPosition, SoundRegistry.DUSTY_COMPUTER_STOP.get(), SoundSource.BLOCKS, 0.8f, 1f);
+            clearPoweredOn();
             clearTerminal();
             unclaim(currentUserId);
             setChanged();
@@ -260,6 +361,6 @@ public class DustyComputerBlockEntity extends BlockEntity implements MenuProvide
     @Nullable
     @Override
     public AbstractContainerMenu createMenu(int containerId, Inventory inventory, Player player) {
-        return new DustyComputerMenu(containerId, inventory, ContainerLevelAccess.create(level, worldPosition), worldPosition);
+        return new DustyComputerMenu(containerId, inventory, ContainerLevelAccess.create(level, worldPosition), worldPosition, poweredOnGameTime);
     }
 }

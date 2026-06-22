@@ -15,21 +15,20 @@ public class CommandRn extends TerminalCommand {
     @Override
     public void execute() {
         if (args.isEmpty()) {
-            println("Usage: rn <target> <newName>");
+            printlnTranslatable("message.null_ouroboros.terminus.rn.usage");
             return;
         }
         String[] parts = args.split("\\s+", 2);
         if (parts.length < 2) {
-            println("Missing new name.");
+            printlnTranslatable("message.null_ouroboros.terminus.rn.missing_name");
             return;
         }
         String targetPath = parts[0];
         String newName = parts[1];
         try {
             fs.rename(targetPath, newName);
-            println("Renamed to " + newName);
         } catch (FileSystemException e) {
-            println("Error: " + e.getMessage());
+            printlnError(e);
         }
     }
 }

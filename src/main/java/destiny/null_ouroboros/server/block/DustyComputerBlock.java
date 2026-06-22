@@ -104,44 +104,49 @@ public class DustyComputerBlock extends BaseEntityBlock {
             return InteractionResult.SUCCESS;
         }
 
-        boolean powered = state.getValue(POWERED);
-
         if (player.isShiftKeyDown()) {
-            if (powered) {
-                level.setBlock(pos, state.setValue(POWERED, false), 3);
-                level.playSound(null, pos, SoundRegistry.DUSTY_COMPUTER_STOP.get(), SoundSource.BLOCKS, 0.8f, 1f);
-
-                if (level.getBlockEntity(pos) instanceof DustyComputerBlockEntity computer) {
-                    computer.clearTerminal();
-                    computer.unclaim(player.getUUID());
-                }
-
-                return InteractionResult.SUCCESS;
+            if (!state.getValue(POWERED)) {
+                return InteractionResult.PASS;
             }
+
+            level.setBlock(pos, state.setValue(POWERED, false), 3);
+            level.playSound(null, pos, SoundRegistry.DUSTY_COMPUTER_STOP.get(), SoundSource.BLOCKS, 0.6f, 1f);
+
+            if (level.getBlockEntity(pos) instanceof DustyComputerBlockEntity computer) {
+                computer.clearPoweredOn();
+                computer.clearTerminal();
+                computer.unclaim(player.getUUID());
+            }
+
+            return InteractionResult.SUCCESS;
+        }
+
+        if (!(level.getBlockEntity(pos) instanceof DustyComputerBlockEntity computer)) {
             return InteractionResult.PASS;
         }
 
-        if (!powered) {
+        if (!state.getValue(POWERED)) {
             level.setBlock(pos, state.setValue(POWERED, true), 3);
             level.playSound(null, pos, SoundRegistry.DUSTY_COMPUTER_START.get(), SoundSource.BLOCKS, 0.8f, 1f);
-            return InteractionResult.SUCCESS;
+            computer.markPoweredOn(level.getGameTime());
         }
 
-        DustyComputerBlockEntity computer = (DustyComputerBlockEntity) level.getBlockEntity(pos);
-        if (computer != null && computer.tryClaim(player.getUUID())) {
-            MenuProvider provider = state.getMenuProvider(level, pos);
-
-            if (provider != null) {
-                NetworkHooks.openScreen((ServerPlayer) player, provider, buf -> buf.writeBlockPos(pos));
-
-                return InteractionResult.SUCCESS;
-            }
-        } else {
+        if (!computer.tryClaim(player.getUUID())) {
             player.sendSystemMessage(Component.translatable("message.null_ouroboros.dusty_computer_already_being_used"));
-
             return InteractionResult.SUCCESS;
         }
-        return InteractionResult.PASS;
+
+        computer.syncSessionToPlayer((ServerPlayer) player);
+        MenuProvider provider = state.getMenuProvider(level, pos);
+        if (provider == null) {
+            return InteractionResult.PASS;
+        }
+
+        NetworkHooks.openScreen((ServerPlayer) player, provider, buf -> {
+            buf.writeBlockPos(pos);
+            buf.writeLong(computer.getPoweredOnGameTime());
+        });
+        return InteractionResult.SUCCESS;
     }
 
     @Override

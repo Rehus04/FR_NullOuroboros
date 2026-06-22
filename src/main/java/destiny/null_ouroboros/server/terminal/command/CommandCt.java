@@ -1,11 +1,17 @@
 package destiny.null_ouroboros.server.terminal.command;
 
+import destiny.null_ouroboros.server.terminal.FileSessionMode;
+import destiny.null_ouroboros.server.terminal.FileSessionRequest;
 import destiny.null_ouroboros.server.terminal.filesystem.*;
 import destiny.null_ouroboros.server.terminal.TerminalCommand;
 import net.minecraft.core.BlockPos;
 
+import javax.annotation.Nullable;
+
 public class CommandCt extends TerminalCommand {
     private final String args;
+    @Nullable
+    private FileSessionRequest sessionRequest = null;
 
     public CommandCt(TerminusFileSystem fs, BlockPos pos, String args) {
         super(fs, pos);
@@ -15,16 +21,24 @@ public class CommandCt extends TerminalCommand {
     @Override
     public void execute() {
         if (args.isEmpty()) {
-            println("Usage: ct <name>");
+            printlnTranslatable("message.null_ouroboros.terminus.ct.usage");
             setDone();
             return;
         }
 
-        boolean isFile = args.contains(".");
+        boolean isFile = TerminusFileSystem.hasExtension(args);
         try {
             if (isFile) {
+                if (!TerminusFileSystem.isTextFileName(args)) {
+                    printlnTranslatable("message.null_ouroboros.terminus.ct.invalid_format");
+                    setDone();
+                    return;
+                }
                 fs.createTextFile(args, "");
-                println("File created: " + args);
+                TerminusNode node = fs.resolvePath(args);
+                if (node instanceof TerminusTextFile file) {
+                    sessionRequest = new FileSessionRequest(file, FileSessionMode.EDIT);
+                }
             } else {
                 fs.createDirectory(args);
 
@@ -32,14 +46,19 @@ public class CommandCt extends TerminalCommand {
                 TerminusNode node = fs.resolvePath(fullPath);
                 if (node instanceof TerminusDirectory dir) {
                     fs.setCurrentDirectory(dir);
-                    println("Created and entered directory " + args);
                 } else {
-                    println("Directory created, but could not navigate to it.");
+                    printlnTranslatable("message.null_ouroboros.terminus.ct.navigate_failed");
                 }
             }
         } catch (FileSystemException e) {
-            println("Error: " + e.getMessage());
+            printlnError(e);
         }
         setDone();
+    }
+
+    @Override
+    @Nullable
+    public FileSessionRequest getFileSessionRequest() {
+        return sessionRequest;
     }
 }

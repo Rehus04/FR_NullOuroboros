@@ -5,21 +5,62 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TerminusFileSystem {
+    private static final String DEFAULT_DRIVE = "T:";
+
     private TerminusDirectory root;
     private String currentPath;
+    private boolean dirty = false;
 
     public TerminusFileSystem() {
-        this.root = new TerminusDirectory("T:", null);
-        this.currentPath = "T:\\";
+        this.root = new TerminusDirectory(DEFAULT_DRIVE, null);
+        this.currentPath = getRootPrefix();
     }
 
     public TerminusDirectory getRoot() { return root; }
     public String getCurrentPath() { return currentPath; }
     public void setCurrentPath(String path) { this.currentPath = path; }
 
+    public boolean isDirty() { return dirty; }
+    public void clearDirty() { dirty = false; }
+
+    private void markDirty() { dirty = true; }
+
+    public void markDirtyForEdit() { dirty = true; }
+
+    public String getRootPrefix() {
+        return root.getName() + "\\";
+    }
+
+    public String getDriveSpecifier() {
+        return root.getName();
+    }
+
+    private boolean isAbsolutePath(String path) {
+        if (path == null || path.length() < 3) return false;
+        return path.charAt(1) == ':' && path.charAt(2) == '\\'
+                && path.substring(0, 2).equalsIgnoreCase(root.getName());
+    }
+
+    public void normalizePathsForRoot() {
+        String prefix = getRootPrefix();
+        if (currentPath == null || currentPath.isEmpty()) {
+            currentPath = prefix;
+            return;
+        }
+        if (currentPath.length() >= 3 && currentPath.charAt(1) == ':' && currentPath.charAt(2) == '\\') {
+            if (!currentPath.substring(0, 2).equalsIgnoreCase(root.getName())) {
+                currentPath = prefix + currentPath.substring(3);
+                markDirty();
+            }
+        } else {
+            currentPath = prefix;
+            markDirty();
+        }
+    }
+
     public TerminusNode resolvePath(String path) {
         if (path == null || path.isEmpty()) return null;
-        if (path.startsWith("T:\\") || path.startsWith("D:\\")) {
+        if (isAbsolutePath(path)) {
             return resolveAbsolute(path);
         }
         return resolveRelative(currentPath, path);
@@ -27,7 +68,7 @@ public class TerminusFileSystem {
 
     private TerminusNode resolveAbsolute(String absolutePath) {
         String drive = absolutePath.substring(0, 2);
-        if (!drive.equals("T:")) return null;
+        if (!drive.equalsIgnoreCase(root.getName())) return null;
         String remainder = absolutePath.substring(2);
         String[] parts = remainder.split("\\\\");
         TerminusNode current = root;
@@ -54,6 +95,7 @@ public class TerminusFileSystem {
     public boolean setCurrentDirectory(TerminusNode node) {
         if (node == null || !node.isDirectory()) return false;
         this.currentPath = buildAbsolutePath(node);
+        markDirty();
         return true;
     }
 
@@ -64,7 +106,7 @@ public class TerminusFileSystem {
             parts.add(0, current.getName());
             current = current.getParent();
         }
-        StringBuilder sb = new StringBuilder("T:\\");
+        StringBuilder sb = new StringBuilder(getRootPrefix());
         for (String part : parts) {
             sb.append(part).append("\\");
         }
@@ -82,11 +124,14 @@ public class TerminusFileSystem {
     }
 
     public String getParentPath(String path) {
-        if (path == null || path.isEmpty()) return "T:\\";
+        String rootPrefix = getRootPrefix();
+        if (path == null || path.isEmpty()) return rootPrefix;
         path = path.replaceAll("\\\\+$", "");
-        if (path.equals("T:\\")) return "T:\\";
+        if (path.equalsIgnoreCase(root.getName()) || path.equalsIgnoreCase(rootPrefix.substring(0, rootPrefix.length() - 1))) {
+            return rootPrefix;
+        }
         int lastBackslash = path.lastIndexOf('\\');
-        if (lastBackslash <= 2) return "T:\\";
+        if (lastBackslash <= 2) return rootPrefix;
         return path.substring(0, lastBackslash + 1);
     }
 
@@ -119,6 +164,15 @@ public class TerminusFileSystem {
         }
         TerminusDirectory newDir = new TerminusDirectory(name, parentDir);
         parentDir.addChild(newDir);
+        markDirty();
+    }
+
+    public static boolean hasExtension(String name) {
+        return name.contains(".");
+    }
+
+    public static boolean isTextFileName(String name) {
+        return name.toLowerCase().endsWith(".txt");
     }
 
     public void createTextFile(String path, String initialContent) throws FileSystemException {
@@ -138,18 +192,18 @@ public class TerminusFileSystem {
             throw new FileSystemException("'" + name + "' already exists.");
         }
 
-        if (!name.contains(".")) {
+        if (!hasExtension(name)) {
             throw new FileSystemException("File name must have an extension (e.g., .txt).");
         }
-        String extension = name.substring(name.lastIndexOf('.') + 1).toLowerCase();
-        if (extension.equals("itemimg")) {
-            throw new FileSystemException("Item image files cannot be created manually.");
+        if (!isTextFileName(name)) {
+            throw new FileSystemException("Cannot create a file with this format.");
         }
         TerminusTextFile file = new TerminusTextFile(name, parentDir, initialContent != null ? initialContent : "");
         parentDir.addChild(file);
+        markDirty();
     }
 
-    public void delete(String path, boolean recursive, boolean force) throws FileSystemException {
+    public void delete(String path, boolean recursive) throws FileSystemException {
         TerminusNode node = resolvePath(path);
         if (node == null) throw new FileSystemException("Path not found.");
         if (node == root) throw new FileSystemException("Cannot delete root.");
@@ -159,6 +213,7 @@ public class TerminusFileSystem {
         TerminusDirectory parent = node.getParent();
         if (parent != null) {
             parent.removeChild(node.getName());
+            markDirty();
         }
     }
 
@@ -178,6 +233,7 @@ public class TerminusFileSystem {
 
         destDirectory.addChild(source);
         source.setParent(destDirectory);
+        markDirty();
     }
 
     public void rename(String path, String newName) throws FileSystemException {
@@ -186,6 +242,8 @@ public class TerminusFileSystem {
         if (node == root) {
             if (newName.length() == 1 && newName.matches("[A-Z]")) {
                 root.setName(newName + ":");
+                normalizePathsForRoot();
+                markDirty();
                 return;
             } else {
                 throw new FileSystemException("Root name must be a single capital letter.");
@@ -196,10 +254,14 @@ public class TerminusFileSystem {
             throw new FileSystemException("An item named '" + newName + "' already exists.");
         }
         parent.renameChild(node.getName(), newName);
+        if (node == getCurrentDirectory()) {
+            setCurrentDirectory(node);
+        }
+        markDirty();
     }
 
     public String resolveToAbsolutePath(String path) {
-        if (path.startsWith("T:\\") || path.startsWith("D:\\")) {
+        if (isAbsolutePath(path)) {
             return path;
         }
         String base = currentPath;
@@ -222,9 +284,9 @@ public class TerminusFileSystem {
     }
 
     public void fromNBT(CompoundTag tag) {
-        this.root = new TerminusDirectory("T:", null);
+        this.root = new TerminusDirectory(DEFAULT_DRIVE, null);
         this.root.fromNBT(tag.getCompound("root"));
         this.currentPath = tag.getString("currentPath");
-        if (currentPath.isEmpty()) this.currentPath = "T:\\";
+        normalizePathsForRoot();
     }
 }

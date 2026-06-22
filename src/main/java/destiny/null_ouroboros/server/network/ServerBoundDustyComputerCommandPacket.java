@@ -1,24 +1,15 @@
 package destiny.null_ouroboros.server.network;
 
-import destiny.null_ouroboros.client.network.ClientBoundDustyComputerSyncPacket;
 import destiny.null_ouroboros.server.block.entity.DustyComputerBlockEntity;
-import destiny.null_ouroboros.server.registry.PacketHandlerRegistry;
 import destiny.null_ouroboros.server.registry.SoundRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.PacketDistributor;
 
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Supplier;
-
-import static destiny.null_ouroboros.client.screen.DustyComputerScreen.isValidCommand;
 
 public class ServerBoundDustyComputerCommandPacket {
     private final BlockPos pos;

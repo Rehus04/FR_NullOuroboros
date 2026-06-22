@@ -10,27 +10,52 @@ import java.util.List;
 import java.util.function.Supplier;
 
 public class ClientBoundDustyComputerSyncPacket {
+    public enum FileSessionType {
+        NONE,
+        VIEW,
+        EDIT
+    }
+
     private final BlockPos pos;
     private final List<String> lines;
     private final String currentPath;
+    private final FileSessionType fileSessionType;
+    private final String fileContent;
+    private final String filePath;
 
-    public ClientBoundDustyComputerSyncPacket(BlockPos pos, List<String> lines, String currentPath) {
+    public ClientBoundDustyComputerSyncPacket(BlockPos pos, List<String> lines, String currentPath,
+                                                FileSessionType fileSessionType, String fileContent, String filePath) {
         this.pos = pos;
         this.lines = lines;
         this.currentPath = currentPath;
+        this.fileSessionType = fileSessionType;
+        this.fileContent = fileContent;
+        this.filePath = filePath;
     }
 
     public static void encode(ClientBoundDustyComputerSyncPacket msg, FriendlyByteBuf buf) {
         buf.writeBlockPos(msg.pos);
         buf.writeCollection(msg.lines, FriendlyByteBuf::writeUtf);
         buf.writeUtf(msg.currentPath);
+        buf.writeEnum(msg.fileSessionType);
+        if (msg.fileSessionType != FileSessionType.NONE) {
+            buf.writeUtf(msg.fileContent);
+            buf.writeUtf(msg.filePath);
+        }
     }
 
     public static ClientBoundDustyComputerSyncPacket decode(FriendlyByteBuf buf) {
         BlockPos pos = buf.readBlockPos();
         List<String> lines = buf.readCollection(ArrayList::new, FriendlyByteBuf::readUtf);
         String currentPath = buf.readUtf();
-        return new ClientBoundDustyComputerSyncPacket(pos, lines, currentPath);
+        FileSessionType fileSessionType = buf.readEnum(FileSessionType.class);
+        String fileContent = "";
+        String filePath = "";
+        if (fileSessionType != FileSessionType.NONE) {
+            fileContent = buf.readUtf();
+            filePath = buf.readUtf();
+        }
+        return new ClientBoundDustyComputerSyncPacket(pos, lines, currentPath, fileSessionType, fileContent, filePath);
     }
 
     public static boolean handle(ClientBoundDustyComputerSyncPacket msg, Supplier<NetworkEvent.Context> ctx) {
@@ -41,6 +66,7 @@ public class ClientBoundDustyComputerSyncPacket {
             if (be instanceof DustyComputerBlockEntity computer) {
                 computer.setLines(msg.lines);
                 computer.setCurrentPath(msg.currentPath);
+                computer.setFileSessionState(msg.fileSessionType, msg.fileContent, msg.filePath);
             }
         });
         return true;

@@ -4,6 +4,9 @@ import destiny.null_ouroboros.server.terminal.filesystem.*;
 import destiny.null_ouroboros.server.terminal.TerminalCommand;
 import net.minecraft.core.BlockPos;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CommandRm extends TerminalCommand {
     private String targetPath;
     private State state = State.INIT;
@@ -18,43 +21,54 @@ public class CommandRm extends TerminalCommand {
     @Override
     public void execute() {
         if (targetPath.isEmpty()) {
-            println("Usage: rm <target> [-c]");
+            printlnTranslatable("message.null_ouroboros.terminus.rm.usage");
             setDone();
             return;
         }
 
-        boolean force = false;
-        String path = targetPath;
-        if (targetPath.endsWith(" -c")) {
-            force = true;
-            path = targetPath.substring(0, targetPath.length() - 3).trim();
-        }
-
-        if (path.isEmpty()) {
-            println("No target specified.");
+        ParsedArgs parsed = parseArgs(targetPath);
+        if (parsed.path.isEmpty()) {
+            printlnTranslatable("message.null_ouroboros.terminus.rm.no_target");
             setDone();
             return;
         }
 
-        if (force) {
-            performDeletion(path);
+        if (parsed.force) {
+            performDeletion(parsed.path);
             setDone();
         } else {
-            this.targetPath = path;
+            this.targetPath = parsed.path;
             state = State.WAITING_FOR_CONFIRM;
-            println("Are you sure you want to delete '" + path + "'?");
-            println("Type 'yes' to confirm, 'no' to cancel.");
+            awaitInput();
+            printlnTranslatable("message.null_ouroboros.terminus.rm.confirm", parsed.path);
+            printlnTranslatable("message.null_ouroboros.terminus.rm.confirm_hint");
         }
     }
+
+    private static ParsedArgs parseArgs(String rawArgs) {
+        boolean force = false;
+        List<String> parts = new ArrayList<>();
+        for (String token : rawArgs.split("\\s+")) {
+            if (token.equals("-c") || token.equals("--confirm")) {
+                force = true;
+            } else if (!token.isEmpty()) {
+                parts.add(token);
+            }
+        }
+        String path = String.join(" ", parts).trim();
+        return new ParsedArgs(path, force);
+    }
+
+    private record ParsedArgs(String path, boolean force) {}
 
     private void performDeletion(String path) {
         TerminusNode target = fs.resolvePath(path);
         if (target == null) {
-            println("Path not found: " + path);
+            printlnTranslatable("message.null_ouroboros.terminus.rm.path_not_found", path);
             return;
         }
         if (target == fs.getRoot()) {
-            println("Cannot delete the root directory.");
+            printlnTranslatable("message.null_ouroboros.terminus.rm.cannot_delete_root");
             return;
         }
 
@@ -63,15 +77,14 @@ public class CommandRm extends TerminalCommand {
 
         if (target.isDirectory() && !isCurrent && currentDir != null) {
             if (isAncestorOf(target, currentDir)) {
-                println("Cannot delete a directory that contains the current directory.");
+                printlnTranslatable("message.null_ouroboros.terminus.rm.cannot_delete_ancestor");
                 return;
             }
         }
 
         TerminusDirectory parent = target.getParent();
         try {
-            fs.delete(path, true, true);
-            println("Deleted " + path);
+            fs.delete(path, true);
 
             if (isCurrent) {
                 if (parent != null) {
@@ -81,7 +94,7 @@ public class CommandRm extends TerminalCommand {
                 }
             }
         } catch (FileSystemException e) {
-            println("Error: " + e.getMessage());
+            printlnError(e);
         }
     }
 
@@ -95,26 +108,27 @@ public class CommandRm extends TerminalCommand {
     }
 
     @Override
-    public void handleInput(String input) {
-        if (state == State.WAITING_FOR_CONFIRM) {
-            input = input.trim().toLowerCase();
-            if (input.equals("yes")) {
-                performDeletion(targetPath);
-                setDone();
-            } else if (input.equals("no")) {
-                println("Deletion cancelled.");
-                setDone();
-            } else {
-                println("Please type 'yes' or 'no'.");
-            }
-        } else {
+    public boolean handleInput(String input) {
+        if (state != State.WAITING_FOR_CONFIRM) {
             setDone();
+            return true;
         }
+
+        input = input.trim().toLowerCase();
+        if (input.equals("y")) {
+            performDeletion(targetPath);
+            setDone();
+            return true;
+        }
+        if (input.equals("n")) {
+            setDone();
+            return true;
+        }
+        return false;
     }
 
     @Override
     public void cancel() {
-        println("Deletion cancelled.");
         setDone();
     }
 }

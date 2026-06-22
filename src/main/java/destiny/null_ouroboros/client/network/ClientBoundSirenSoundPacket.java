@@ -48,7 +48,7 @@ public class ClientBoundSirenSoundPacket {
             var level = Minecraft.getInstance().level;
             if (level != null) {
                 if (normalEvent != null && distantEvent != null) {
-                    SirenSoundManager.play(pos, normalEvent, distantEvent, looping);
+                    SirenSoundManager.applyFromPacket(pos, normalEvent, distantEvent, looping);
                 } else {
                     SirenSoundManager.stop(pos);
                 }

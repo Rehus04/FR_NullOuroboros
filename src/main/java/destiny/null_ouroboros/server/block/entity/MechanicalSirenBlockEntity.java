@@ -67,7 +67,7 @@ public class MechanicalSirenBlockEntity extends BlockEntity {
         if (manifoldingActive) return;
 
         if (state == State.IDLE && powered) {
-            transitionToStart(false);
+            transitionToStart();
         }
     }
 
@@ -81,24 +81,28 @@ public class MechanicalSirenBlockEntity extends BlockEntity {
 
         sirenEntity.rotationAngle = (sirenEntity.rotationAngle + sirenEntity.rotationSpeed) % 360f;
 
-        if (!level.isClientSide) {
-            sirenEntity.serverTick(level);
+        if (level.isClientSide) {
+            sirenEntity.clientTickSounds();
+        } else {
+            sirenEntity.serverTick();
             boolean shouldBeActive = sirenEntity.state != State.IDLE;
+            BlockState currentState = level.getBlockState(pos);
 
-            if (state.getValue(MechanicalSirenBlock.ACTIVE) != shouldBeActive) {
-                level.setBlock(pos, state.setValue(MechanicalSirenBlock.ACTIVE, shouldBeActive), 3);
+            if (currentState.getBlock() instanceof MechanicalSirenBlock
+                    && currentState.getValue(MechanicalSirenBlock.ACTIVE) != shouldBeActive) {
+                level.setBlock(pos, currentState.setValue(MechanicalSirenBlock.ACTIVE, shouldBeActive), 3);
             }
         }
     }
 
-    private void serverTick(Level level) {
+    private void serverTick() {
         if (manifoldingActive && state == State.IDLE) {
             if (manifoldingDelay > 0) {
                 manifoldingDelay--;
                 setChanged();
 
                 if (manifoldingDelay <= 0) {
-                    transitionToStart(true);
+                    transitionToStart();
                 }
             }
             return;
@@ -112,14 +116,8 @@ public class MechanicalSirenBlockEntity extends BlockEntity {
         switch (state) {
             case START -> {
                 if (phaseTimer >= phaseDuration) {
-                    if (loopsRemaining > 0) {
+                    if (loopsRemaining > 0 || isRedstonePowered()) {
                         transitionToLoop();
-                    } else if (loopsRemaining == -1) {
-                        if (level.hasNeighborSignal(worldPosition)) {
-                            transitionToLoop();
-                        } else {
-                            transitionToEnd();
-                        }
                     } else {
                         transitionToEnd();
                     }
@@ -130,12 +128,10 @@ public class MechanicalSirenBlockEntity extends BlockEntity {
                     if (loopsRemaining > 1) {
                         loopsRemaining--;
                         phaseTimer = 0;
-                    } else if (loopsRemaining == -1) {
-                        if (level.hasNeighborSignal(worldPosition)) {
-                            phaseTimer = 0;
-                        } else {
-                            transitionToEnd();
-                        }
+                    } else if (loopsRemaining == 1) {
+                        transitionToEnd();
+                    } else if (isRedstonePowered()) {
+                        phaseTimer = 0;
                     } else {
                         transitionToEnd();
                     }
@@ -150,13 +146,19 @@ public class MechanicalSirenBlockEntity extends BlockEntity {
         setChanged();
     }
 
-    private void transitionToStart(boolean manifoldingOverride) {
+    private boolean isRedstonePowered() {
+        return getBlockState().getValue(MechanicalSirenBlock.POWERED);
+    }
+
+    private void syncToClient() {
+        if (level != null && !level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
+    }
+
+    private void transitionToStart() {
         state = State.START;
         phaseTimer = 0;
-
-        if (!manifoldingOverride) {
-            loopsRemaining = -1;
-        }
 
         if (level != null) {
             level.getChunkSource().updateChunkForced(new ChunkPos(worldPosition), true);
@@ -164,6 +166,7 @@ public class MechanicalSirenBlockEntity extends BlockEntity {
             level.blockEntityChanged(worldPosition);
         }
         sendSoundPacket();
+        syncToClient();
     }
 
     private void transitionToLoop() {
@@ -175,6 +178,7 @@ public class MechanicalSirenBlockEntity extends BlockEntity {
             level.blockEntityChanged(worldPosition);
         }
         sendSoundPacket();
+        syncToClient();
     }
 
     private void transitionToEnd() {
@@ -186,6 +190,7 @@ public class MechanicalSirenBlockEntity extends BlockEntity {
             level.blockEntityChanged(worldPosition);
         }
         sendSoundPacket();
+        syncToClient();
     }
 
     private void transitionToIdle() {
@@ -200,6 +205,7 @@ public class MechanicalSirenBlockEntity extends BlockEntity {
             level.blockEntityChanged(worldPosition);
         }
         sendSoundPacket();
+        syncToClient();
     }
 
     private void sendSoundPacket() {
@@ -217,11 +223,42 @@ public class MechanicalSirenBlockEntity extends BlockEntity {
 
     private int getPhaseDuration() {
         return switch (state) {
-            case START -> (int) 2.129 * 20;
-            case LOOP -> (int) 8.932 * 20;
-            case END -> (int) 14.713 * 20;
+            case START -> (int) (2.129 * 20);
+            case LOOP -> (int) (8.932 * 20);
+            case END -> (int) (14.713 * 20);
             default -> 0;
         };
+    }
+
+    private void clientTickSounds() {
+        State trackedPhase = SirenSoundManager.getTrackedPhase(worldPosition);
+
+        if (state == State.IDLE) {
+            if (trackedPhase == State.END || (trackedPhase == null && SirenSoundManager.isActive(worldPosition))) {
+                SirenSoundManager.stop(worldPosition);
+            }
+            return;
+        }
+
+        if (trackedPhase == null) {
+            if (state != State.END) {
+                SirenSoundManager.syncFromBlockEntity(this);
+            }
+            return;
+        }
+
+        if (trackedPhase.ordinal() > state.ordinal()) {
+            return;
+        }
+
+        if (trackedPhase != state) {
+            SirenSoundManager.syncFromBlockEntity(this);
+            return;
+        }
+
+        if (state == State.LOOP && !SirenSoundManager.isActive(worldPosition)) {
+            SirenSoundManager.syncFromBlockEntity(this);
+        }
     }
 
     @Nullable
@@ -270,6 +307,9 @@ public class MechanicalSirenBlockEntity extends BlockEntity {
             if (this.state != newState) {
                 this.state = newState;
                 this.phaseTimer = 0;
+                if (level != null && level.isClientSide) {
+                    SirenSoundManager.syncFromBlockEntity(this);
+                }
             }
         }
     }
