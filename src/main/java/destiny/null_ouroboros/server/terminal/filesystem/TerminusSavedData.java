@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public class TerminusSavedData extends SavedData {
-    private static final String DATA_NAME = "null_ouroboros_terminus";
+    private static final String DATA_NAME = "terminus";
     private final Map<UUID, TerminusFileSystem> fileSystems = new HashMap<>();
     private final Map<UUID, TerminusSession> sessions = new HashMap<>();
 
