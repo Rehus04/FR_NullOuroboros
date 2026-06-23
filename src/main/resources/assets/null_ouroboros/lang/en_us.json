@@ -79,5 +79,7 @@
 
   "message.null_ouroboros.terminus.cl.usage": "[none]",
 
+  "message.null_ouroboros.cannot_rest_on_verge": "You can't put your mind to rest.",
+
   "itemGroup.null_ouroboros.main": "NULL OUROBOROS"
 }

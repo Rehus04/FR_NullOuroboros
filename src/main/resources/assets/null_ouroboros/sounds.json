@@ -300,5 +300,14 @@
         "name": "null_ouroboros:dusty_computer_erase"
       }
     ]
+  },
+  "verge_ambience": {
+    "subtitle": "subtitle.null_ouroboros.verge_ambience",
+    "sounds": [
+      {
+        "name": "null_ouroboros:verge_ambience",
+        "stream": true
+      }
+    ]
   }
 }

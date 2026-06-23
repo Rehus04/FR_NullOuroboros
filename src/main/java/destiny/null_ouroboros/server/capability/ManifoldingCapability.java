@@ -22,6 +22,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -48,7 +49,7 @@ public class ManifoldingCapability implements INBTSerializable<CompoundTag> {
     public static final TagKey<Block> IGNORED_BLOCKS = BlockTags.create(ResourceLocation.fromNamespaceAndPath(NullOuroboros.MODID, "ignored_by_manifolding_wind"));
 
     public static final int SIREN_RADIUS = 256;
-    public static final float WIND_PUSH_FORCE = 0.3f;
+    public static final float WIND_PUSH_FORCE = 0.5f;
     public static final int DAMAGE_INTERVAL = 20;
 
     public static final int CLEAR_DELAY_MIN = 1 * 60 * 20;
@@ -125,7 +126,7 @@ public class ManifoldingCapability implements INBTSerializable<CompoundTag> {
 
         if (phase != ManifoldingPhase.CLEAR) {
             spawnWindParticles(level);
-            applyWindToAllEntities(level);
+            applyDamageToAllEntities(level);
 
             if (phase != ManifoldingPhase.POST_EVENT) {
                 if (thunderTimer > 0) {
@@ -172,10 +173,10 @@ public class ManifoldingCapability implements INBTSerializable<CompoundTag> {
                 windAngle = level.random.nextFloat() * 360;
 
                 activateSirens(level);
-                triggerDetectors(level);
                 playThunder(level);
             }
             case ACTIVE -> {
+                triggerDetectors(level);
             }
             case POST_EVENT -> {
                 triggerDetectors(level);
@@ -258,7 +259,9 @@ public class ManifoldingCapability implements INBTSerializable<CompoundTag> {
         }
     }
 
-    private void applyWindToAllEntities(ServerLevel level) {
+    public void applyWindToAllEntities(ServerLevel level) {
+        if (phase == ManifoldingPhase.CLEAR) return;
+
         float strength = getWindStrength(level);
         if (strength <= 0) return;
 
@@ -266,6 +269,12 @@ public class ManifoldingCapability implements INBTSerializable<CompoundTag> {
             if (!level.isLoaded(entity.blockPosition())) continue;
 
             applyWindToEntity(entity, level);
+        }
+    }
+
+    private void applyDamageToAllEntities(ServerLevel level) {
+        for (Entity entity : level.getEntities().getAll()) {
+            if (!level.isLoaded(entity.blockPosition())) continue;
 
             if (entity instanceof LivingEntity living) {
                 damageIfExposed(living, level);
@@ -321,6 +330,12 @@ public class ManifoldingCapability implements INBTSerializable<CompoundTag> {
         return entity.position().add(0, entity.getBbHeight() / 2, 0);
     }
 
+    public static Vec3 computeWindOffset(float strength, float windAngle, double pushMultiplier) {
+        double push = WIND_PUSH_FORCE * strength * pushMultiplier;
+        Vec3 dir = Vec3.directionFromRotation(0, windAngle).normalize();
+        return new Vec3(dir.x * push, 0, dir.z * push);
+    }
+
     public void applyWindToEntity(Entity entity, ServerLevel level) {
         if (!level.dimension().location().equals(DIMENSION_ID)) return;
         if (phase == ManifoldingPhase.CLEAR) return;
@@ -331,12 +346,8 @@ public class ManifoldingCapability implements INBTSerializable<CompoundTag> {
         float strength = getWindStrength(level);
         if (strength <= 0) return;
 
-        double effectivePush = WIND_PUSH_FORCE * strength;
-        if (isNearBurrowBeacon(entity, level)) {
-            effectivePush *= BEACON_PUSH_MULTIPLIER;
-        }
+        double pushMultiplier = isNearBurrowBeacon(entity, level) ? BEACON_PUSH_MULTIPLIER : 1.0;
 
-        Vec3 direction = Vec3.directionFromRotation(0, windAngle).normalize();
         Vec3 checkDirection = Vec3.directionFromRotation(0, windAngle + 180).normalize();
 
         Vec3 checkOrigin = getEntityCheckOrigin(entity);
@@ -352,9 +363,9 @@ public class ManifoldingCapability implements INBTSerializable<CompoundTag> {
         }
 
         if (exposed) {
-            Vec3 velocity = entity.getDeltaMovement();
-            entity.setDeltaMovement(velocity.x + direction.x * effectivePush, velocity.y, velocity.z + direction.z * effectivePush);
-            entity.hurtMarked = true;
+            boolean wasOnGround = entity.onGround();
+            entity.move(MoverType.SELF, computeWindOffset(strength, windAngle, pushMultiplier));
+            entity.setOnGround(wasOnGround);
         }
     }
 

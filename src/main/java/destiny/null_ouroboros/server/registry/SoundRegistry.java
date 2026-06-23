@@ -24,6 +24,7 @@ public class SoundRegistry {
     public static final RegistryObject<SoundEvent> MANIFOLDING_LOOP_MUFFLED = registerSoundEvent("manifolding_loop_muffled");
     public static final RegistryObject<SoundEvent> MANIFOLDING_END_MUFFLED = registerSoundEvent("manifolding_end_muffled");
     public static final RegistryObject<SoundEvent> MANIFOLDING_THUNDER = registerSoundEvent("manifolding_thunder");
+    public static final RegistryObject<SoundEvent> VERGE_AMBIENCE = registerSoundEvent("verge_ambience");
 
     public static final RegistryObject<SoundEvent> MECHANICAL_SIREN_START = registerSoundEvent("mechanical_siren_start");
     public static final RegistryObject<SoundEvent> MECHANICAL_SIREN_START_DISTANT = registerSoundEvent("mechanical_siren_start_distant");

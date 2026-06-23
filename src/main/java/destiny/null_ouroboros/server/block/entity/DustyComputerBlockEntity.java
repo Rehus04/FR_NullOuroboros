@@ -310,7 +310,7 @@ public class DustyComputerBlockEntity extends BlockEntity implements MenuProvide
                 }
             }
             level.setBlock(worldPosition, state.setValue(DustyComputerBlock.POWERED, false), 3);
-            level.playSound(null, worldPosition, SoundRegistry.DUSTY_COMPUTER_STOP.get(), SoundSource.BLOCKS, 0.8f, 1f);
+            level.playSound(null, worldPosition, SoundRegistry.DUSTY_COMPUTER_STOP.get(), SoundSource.BLOCKS, 0.6f, 1f);
             clearPoweredOn();
             clearTerminal();
             unclaim(currentUserId);
