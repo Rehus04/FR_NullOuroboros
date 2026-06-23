@@ -8,12 +8,12 @@ import net.minecraft.core.BlockPos;
 
 import javax.annotation.Nullable;
 
-public class CommandCt extends TerminalCommand {
+public class CommandCr extends TerminalCommand {
     private final String args;
     @Nullable
     private FileSessionRequest sessionRequest = null;
 
-    public CommandCt(TerminusFileSystem fs, BlockPos pos, String args) {
+    public CommandCr(TerminusFileSystem fs, BlockPos pos, String args) {
         super(fs, pos);
         this.args = args.trim();
     }
@@ -21,7 +21,7 @@ public class CommandCt extends TerminalCommand {
     @Override
     public void execute() {
         if (args.isEmpty()) {
-            printlnTranslatable("message.null_ouroboros.terminus.ct.usage");
+            printlnTranslatable("message.null_ouroboros.terminus.cr.usage");
             setDone();
             return;
         }
@@ -30,7 +30,7 @@ public class CommandCt extends TerminalCommand {
         try {
             if (isFile) {
                 if (!TerminusFileSystem.isTextFileName(args)) {
-                    printlnTranslatable("message.null_ouroboros.terminus.ct.invalid_format");
+                    printlnTranslatable("message.null_ouroboros.terminus.cr.invalid_format");
                     setDone();
                     return;
                 }
@@ -47,7 +47,7 @@ public class CommandCt extends TerminalCommand {
                 if (node instanceof TerminusDirectory dir) {
                     fs.setCurrentDirectory(dir);
                 } else {
-                    printlnTranslatable("message.null_ouroboros.terminus.ct.navigate_failed");
+                    printlnTranslatable("message.null_ouroboros.terminus.cr.navigate_failed");
                 }
             }
         } catch (FileSystemException e) {

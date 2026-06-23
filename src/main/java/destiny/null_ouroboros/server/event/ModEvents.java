@@ -29,7 +29,7 @@ public class ModEvents {
         CommandRegistry.registerAlias("rmdir", "rm");
         CommandRegistry.registerAlias("del", "rm");
 
-        CommandRegistry.registerPrimary("ct", "message.null_ouroboros.terminus.ct.usage", CommandCt::new);
+        CommandRegistry.registerPrimary("cr", "message.null_ouroboros.terminus.cr.usage", CommandCr::new);
         CommandRegistry.registerAlias("mk", "ct");
 
         CommandRegistry.registerPrimary("ed", "message.null_ouroboros.terminus.ed.usage", CommandEd::new);
