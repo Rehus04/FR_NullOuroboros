@@ -104,75 +104,85 @@ public class DustyComputerBlock extends BaseEntityBlock {
             return InteractionResult.SUCCESS;
         }
 
-        boolean powered = state.getValue(POWERED);
-
         if (player.isShiftKeyDown()) {
-            if (powered) {
-                level.setBlock(pos, state.setValue(POWERED, false), 3);
-                level.playSound(null, pos, SoundRegistry.DUSTY_COMPUTER_STOP.get(), SoundSource.BLOCKS, 0.8f, 1f);
-
-                if (level.getBlockEntity(pos) instanceof DustyComputerBlockEntity computer) {
-                    computer.clearTerminal();
-                    computer.unclaim(player.getUUID());
-                }
-
-                return InteractionResult.SUCCESS;
+            if (!state.getValue(POWERED)) {
+                return InteractionResult.PASS;
             }
+
+            level.setBlock(pos, state.setValue(POWERED, false), 3);
+            level.playSound(null, pos, SoundRegistry.DUSTY_COMPUTER_STOP.get(), SoundSource.BLOCKS, 0.6f, 1f);
+
+            if (level.getBlockEntity(pos) instanceof DustyComputerBlockEntity computer) {
+                computer.clearPoweredOn();
+                computer.clearTerminal();
+                computer.unclaim(player.getUUID());
+            }
+
+            return InteractionResult.SUCCESS;
+        }
+
+        if (!(level.getBlockEntity(pos) instanceof DustyComputerBlockEntity computer)) {
             return InteractionResult.PASS;
         }
 
-        if (!powered) {
+        if (!state.getValue(POWERED)) {
             level.setBlock(pos, state.setValue(POWERED, true), 3);
             level.playSound(null, pos, SoundRegistry.DUSTY_COMPUTER_START.get(), SoundSource.BLOCKS, 0.8f, 1f);
-            return InteractionResult.SUCCESS;
+            computer.markPoweredOn(level.getGameTime());
         }
 
-        DustyComputerBlockEntity computer = (DustyComputerBlockEntity) level.getBlockEntity(pos);
-        if (computer != null && computer.tryClaim(player.getUUID())) {
-            MenuProvider provider = state.getMenuProvider(level, pos);
-
-            if (provider != null) {
-                NetworkHooks.openScreen((ServerPlayer) player, provider, buf -> buf.writeBlockPos(pos));
-
-                return InteractionResult.SUCCESS;
-            }
-        } else {
+        if (!computer.tryClaim(player.getUUID())) {
             player.sendSystemMessage(Component.translatable("message.null_ouroboros.dusty_computer_already_being_used"));
-
             return InteractionResult.SUCCESS;
         }
-        return InteractionResult.PASS;
+
+        computer.syncSessionToPlayer((ServerPlayer) player);
+        MenuProvider provider = state.getMenuProvider(level, pos);
+        if (provider == null) {
+            return InteractionResult.PASS;
+        }
+
+        NetworkHooks.openScreen((ServerPlayer) player, provider, buf -> {
+            buf.writeBlockPos(pos);
+            buf.writeLong(computer.getPoweredOnGameTime());
+        });
+        return InteractionResult.SUCCESS;
     }
 
     @Override
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         super.setPlacedBy(level, pos, state, placer, stack);
-        if (!level.isClientSide) {
-            BlockEntity be = level.getBlockEntity(pos);
+        if (level.isClientSide) {
+            return;
+        }
 
-            if (be instanceof DustyComputerBlockEntity computer) {
-                CompoundTag itemTag = stack.getTag();
+        BlockEntity be = level.getBlockEntity(pos);
+        if (!(be instanceof DustyComputerBlockEntity computer)) {
+            return;
+        }
 
-                if (itemTag != null && itemTag.hasUUID("ComputerUUID")) {
-                    computer.setFilesystemId(itemTag.getUUID("ComputerUUID"));
-                } else {
-                    computer.setFilesystemId(UUID.randomUUID());
-                }
+        if (computer.getFilesystemId() == null) {
+            UUID idFromItem = readFilesystemIdFromItem(stack);
+            computer.setFilesystemId(idFromItem != null ? idFromItem : UUID.randomUUID());
+        }
+    }
+
+    @Override
+    public void playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
+        BlockEntity blockEntity = level.getBlockEntity(pos);
+        if (!level.isClientSide && blockEntity instanceof DustyComputerBlockEntity computer) {
+            computer.clearSessionOnBreak();
+            if (player.isCreative()) {
+                popResource(level, pos, createStackWithFilesystemId(computer));
             }
         }
+        super.playerWillDestroy(level, pos, state, player);
     }
 
     @Override
     public void playerDestroy(Level level, Player player, BlockPos pos, BlockState state, @Nullable BlockEntity blockEntity, ItemStack tool) {
         if (!level.isClientSide && blockEntity instanceof DustyComputerBlockEntity computer) {
-            ItemStack stack = new ItemStack(this);
-            CompoundTag tag = stack.getOrCreateTag();
-
-            if (computer.getFilesystemId() != null) {
-                tag.putUUID("ComputerUUID", computer.getFilesystemId());
-            }
-
-            popResource(level, pos, stack);
+            popResource(level, pos, createStackWithFilesystemId(computer));
         } else {
             super.playerDestroy(level, player, pos, state, blockEntity, tool);
         }
@@ -183,10 +193,43 @@ public class DustyComputerBlock extends BaseEntityBlock {
         ItemStack stack = super.getCloneItemStack(level, pos, state);
         BlockEntity be = level.getBlockEntity(pos);
 
-        if (be instanceof DustyComputerBlockEntity computer && computer.getFilesystemId() != null) {
-            stack.getOrCreateTag().putUUID("ComputerUUID", computer.getFilesystemId());
+        if (be instanceof DustyComputerBlockEntity computer) {
+            return createStackWithFilesystemId(computer);
         }
 
+        return stack;
+    }
+
+    @Nullable
+    private static UUID readFilesystemIdFromItem(ItemStack stack) {
+        CompoundTag blockEntityTag = stack.getTagElement("BlockEntityTag");
+        if (blockEntityTag != null && blockEntityTag.hasUUID(DustyComputerBlockEntity.FILESYSTEM_ID)) {
+            return blockEntityTag.getUUID(DustyComputerBlockEntity.FILESYSTEM_ID);
+        }
+
+        CompoundTag itemTag = stack.getTag();
+        if (itemTag == null) {
+            return null;
+        }
+        if (itemTag.hasUUID(DustyComputerBlockEntity.FILESYSTEM_ID)) {
+            return itemTag.getUUID(DustyComputerBlockEntity.FILESYSTEM_ID);
+        }
+        if (itemTag.hasUUID(DustyComputerBlockEntity.LEGACY_ITEM_FILESYSTEM_ID)) {
+            return itemTag.getUUID(DustyComputerBlockEntity.LEGACY_ITEM_FILESYSTEM_ID);
+        }
+        return null;
+    }
+
+    private ItemStack createStackWithFilesystemId(DustyComputerBlockEntity computer) {
+        ItemStack stack = new ItemStack(this);
+        UUID filesystemId = computer.getFilesystemId();
+        if (filesystemId == null) {
+            return stack;
+        }
+
+        CompoundTag blockEntityTag = new CompoundTag();
+        blockEntityTag.putUUID(DustyComputerBlockEntity.FILESYSTEM_ID, filesystemId);
+        stack.getOrCreateTag().put("BlockEntityTag", blockEntityTag);
         return stack;
     }
 

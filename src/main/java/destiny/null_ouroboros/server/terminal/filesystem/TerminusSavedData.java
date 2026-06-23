@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public class TerminusSavedData extends SavedData {
-    private static final String DATA_NAME = "null_ouroboros_terminus";
+    private static final String DATA_NAME = "terminus";
     private final Map<UUID, TerminusFileSystem> fileSystems = new HashMap<>();
     private final Map<UUID, TerminusSession> sessions = new HashMap<>();
 
@@ -25,22 +25,20 @@ public class TerminusSavedData extends SavedData {
     }
 
     public TerminusSession getOrCreateSession(UUID uuid, BlockPos computerPos) {
-        return sessions.computeIfAbsent(uuid, id -> {
-            setDirty();
-            return new TerminusSession(id, computerPos);
-        });
+        TerminusSession existing = sessions.get(uuid);
+        if (existing != null) {
+            existing.setComputerPos(computerPos);
+            return existing;
+        }
+        setDirty();
+        TerminusSession session = new TerminusSession(uuid, computerPos);
+        sessions.put(uuid, session);
+        return session;
     }
 
     public static TerminusSavedData get(Level level) {
         if (!(level instanceof ServerLevel serverLevel)) return null;
         return serverLevel.getDataStorage().computeIfAbsent(TerminusSavedData::load, TerminusSavedData::new, DATA_NAME);
-    }
-
-    public TerminusFileSystem getOrCreate(UUID uuid) {
-        return fileSystems.computeIfAbsent(uuid, id -> {
-            setDirty();
-            return new TerminusFileSystem();
-        });
     }
 
     public void remove(UUID uuid) {

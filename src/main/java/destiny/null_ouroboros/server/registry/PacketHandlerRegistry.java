@@ -2,6 +2,7 @@ package destiny.null_ouroboros.server.registry;
 
 import destiny.null_ouroboros.NullOuroboros;
 import destiny.null_ouroboros.client.network.*;
+import destiny.null_ouroboros.server.network.ServerBoundDustyComputerCloseFileSessionPacket;
 import destiny.null_ouroboros.server.network.ServerBoundDustyComputerCommandPacket;
 import destiny.null_ouroboros.server.network.ServerBoundDustyComputerShutdownPacket;
 import net.minecraft.resources.ResourceLocation;
@@ -72,6 +73,12 @@ public class PacketHandlerRegistry {
                 .encoder(ServerBoundDustyComputerShutdownPacket::encode)
                 .decoder(ServerBoundDustyComputerShutdownPacket::decode)
                 .consumerMainThread(ServerBoundDustyComputerShutdownPacket::handle)
+                .add();
+
+        INSTANCE.messageBuilder(ServerBoundDustyComputerCloseFileSessionPacket.class, index++, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(ServerBoundDustyComputerCloseFileSessionPacket::encode)
+                .decoder(ServerBoundDustyComputerCloseFileSessionPacket::decode)
+                .consumerMainThread(ServerBoundDustyComputerCloseFileSessionPacket::handle)
                 .add();
     }
 }

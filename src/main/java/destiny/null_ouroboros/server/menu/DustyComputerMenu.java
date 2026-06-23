@@ -21,17 +21,19 @@ import java.util.UUID;
 public class DustyComputerMenu extends AbstractContainerMenu {
     private final ContainerLevelAccess access;
     private final BlockPos pos;
+    private final long poweredOnGameTime;
     @Nullable
     private UUID currentUserId;
 
     public DustyComputerMenu(int containerId, Inventory playerInv, FriendlyByteBuf data) {
-        this(containerId, playerInv, ContainerLevelAccess.NULL, data.readBlockPos());
+        this(containerId, playerInv, ContainerLevelAccess.NULL, data.readBlockPos(), data.readLong());
     }
 
-    public DustyComputerMenu(int containerId, Inventory playerInv, ContainerLevelAccess access, BlockPos pos) {
+    public DustyComputerMenu(int containerId, Inventory playerInv, ContainerLevelAccess access, BlockPos pos, long poweredOnGameTime) {
         super(MenuRegistry.DUSTY_COMPUTER_MENU.get(), containerId);
         this.access = access;
         this.pos = pos;
+        this.poweredOnGameTime = poweredOnGameTime;
 
         if (playerInv.player instanceof ServerPlayer serverPlayer) {
             this.currentUserId = serverPlayer.getUUID();
@@ -42,6 +44,10 @@ public class DustyComputerMenu extends AbstractContainerMenu {
 
     public BlockPos getBlockPos() {
         return pos;
+    }
+
+    public long getPoweredOnGameTime() {
+        return poweredOnGameTime;
     }
 
     @Override

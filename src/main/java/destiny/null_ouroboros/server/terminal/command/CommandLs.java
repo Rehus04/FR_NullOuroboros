@@ -19,17 +19,20 @@ public class CommandLs extends TerminalCommand {
         String targetPath = args.isEmpty() ? "." : args;
         TerminusNode target = fs.resolvePath(targetPath);
         if (target == null) {
-            println("Path not found.");
+            printlnTranslatable("message.null_ouroboros.terminus.ls.path_not_found");
             return;
         }
         if (!(target instanceof TerminusDirectory dir)) {
-            println("Not a directory.");
+            printlnTranslatable("message.null_ouroboros.terminus.ls.not_directory");
             return;
         }
-        println("Listing of " + fs.getAbsolutePath(dir) + ":");
+        if (dir.getChildren().isEmpty()) {
+            printlnTranslatable("message.null_ouroboros.terminus.ls.directory_empty");
+            return;
+        }
         for (TerminusNode child : dir.getChildren().values()) {
             String type = child.isDirectory() ? "<DIR>" : "<FILE>";
-            println(type + "  " + child.getName());
+            println(String.format("%-6s  %s", type, child.getName()));
         }
     }
 }

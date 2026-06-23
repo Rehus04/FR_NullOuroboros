@@ -2,7 +2,10 @@ package destiny.null_ouroboros.server.terminal;
 
 import destiny.null_ouroboros.client.network.ClientBoundDustyComputerSyncPacket;
 import destiny.null_ouroboros.server.registry.PacketHandlerRegistry;
+import destiny.null_ouroboros.server.terminal.filesystem.TerminusDirectory;
 import destiny.null_ouroboros.server.terminal.filesystem.TerminusFileSystem;
+import destiny.null_ouroboros.server.terminal.filesystem.TerminusNode;
+import destiny.null_ouroboros.server.terminal.filesystem.TerminusTextFile;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -14,17 +17,32 @@ import java.util.List;
 import java.util.UUID;
 
 public class TerminusSession {
+    public record FileSessionState(
+            String filePath,
+            String returnDirectoryPath,
+            TerminusDirectory returnDirectory,
+            FileSessionMode mode,
+            List<String> savedTerminalLines
+    ) {}
+
     private final UUID filesystemId;
-    private final BlockPos computerPos;
+    private BlockPos computerPos;
     private final List<String> lines = new ArrayList<>();
     private String currentPath = "T:\\";
     @Nullable
     private TerminalCommand activeCommand = null;
     @Nullable
     private UUID playerId = null;
+    @Nullable
+    private FileSessionState fileSession = null;
+    private boolean shutdownRequested = false;
 
     public TerminusSession(UUID filesystemId, BlockPos computerPos) {
         this.filesystemId = filesystemId;
+        this.computerPos = computerPos;
+    }
+
+    public void setComputerPos(BlockPos computerPos) {
         this.computerPos = computerPos;
     }
 
@@ -35,11 +53,80 @@ public class TerminusSession {
     public void setPlayerId(@Nullable UUID playerId) { this.playerId = playerId; }
     @Nullable public TerminalCommand getActiveCommand() { return activeCommand; }
     public void clearActiveCommand() { activeCommand = null; }
+    @Nullable public FileSessionState getFileSession() { return fileSession; }
+    public boolean isInFileSession() { return fileSession != null; }
 
     public void addLine(String line) { lines.add(line); }
     public void clearLines() { lines.clear(); }
 
+    public boolean consumeShutdownRequest() {
+        boolean requested = shutdownRequested;
+        shutdownRequested = false;
+        return requested;
+    }
+
+    public void clearToBootState(TerminusFileSystem fs) {
+        if (activeCommand != null) {
+            activeCommand.cancel();
+            clearActiveCommand();
+        }
+        cancelFileSession(fs);
+        clearLines();
+        fs.setCurrentDirectory(fs.getRoot());
+        syncFromFileSystem(fs);
+    }
+
+    public void syncFromFileSystem(TerminusFileSystem fs) {
+        this.currentPath = fs.getCurrentPath();
+    }
+
+    public void beginFileSession(TerminusTextFile file, TerminusFileSystem fs, FileSessionMode mode) {
+        List<String> saved = new ArrayList<>(lines);
+        lines.clear();
+        this.fileSession = new FileSessionState(
+                fs.getAbsolutePath(file),
+                fs.getCurrentPath(),
+                fs.getCurrentDirectory(),
+                mode,
+                saved
+        );
+    }
+
+    public void closeFileSession(TerminusFileSystem fs, @Nullable String contentToSave) {
+        if (fileSession == null) return;
+
+        if (fileSession.mode() == FileSessionMode.EDIT && contentToSave != null) {
+            TerminusNode node = fs.resolvePath(fileSession.filePath());
+            if (node instanceof TerminusTextFile textFile) {
+                textFile.setContent(contentToSave);
+                fs.markDirtyForEdit();
+            }
+        }
+
+        fs.setCurrentDirectory(fileSession.returnDirectory());
+        this.currentPath = fs.getCurrentPath();
+
+        lines.clear();
+        lines.addAll(fileSession.savedTerminalLines());
+        this.fileSession = null;
+    }
+
+    public void cancelFileSession(TerminusFileSystem fs) {
+        if (fileSession == null) return;
+
+        fs.setCurrentDirectory(fileSession.returnDirectory());
+        this.currentPath = fs.getCurrentPath();
+
+        lines.clear();
+        lines.addAll(fileSession.savedTerminalLines());
+        this.fileSession = null;
+    }
+
     public void processCommand(String rawLine, TerminusFileSystem fs) {
+        if (fileSession != null) {
+            return;
+        }
+
         String trimmed = rawLine.trim();
 
         if (activeCommand != null && activeCommand.isDone()) {
@@ -49,24 +136,23 @@ public class TerminusSession {
         if (activeCommand != null) {
             if (trimmed.equalsIgnoreCase("cancel")) {
                 try { activeCommand.cancel(); } catch (Exception ignored) {}
-                addLine("> " + trimmed);
-                addLine("Command cancelled.");
                 activeCommand = null;
             } else {
-                addLine("> " + trimmed);
+                boolean accepted;
                 try {
-                    activeCommand.handleInput(trimmed);
+                    accepted = activeCommand.handleInput(trimmed);
                 } catch (Exception e) {
-                    addLine("An error occurred while processing your response.");
+                    addLine(Component.translatable("message.null_ouroboros.terminus.processing_error").getString());
                     activeCommand = null;
+                    accepted = false;
                 }
-                if (activeCommand != null) {
-                    for (Component comp : activeCommand.getOutput()) {
-                        addLine(comp.getString());
-                    }
-                    activeCommand.clearOutput();
-                    if (activeCommand.isDone()) {
-                        activeCommand = null;
+                if (accepted) {
+                    addLine("> " + trimmed);
+                    if (activeCommand != null) {
+                        appendCommandOutput(activeCommand);
+                        if (activeCommand.isDone()) {
+                            activeCommand = null;
+                        }
                     }
                 }
             }
@@ -82,23 +168,33 @@ public class TerminusSession {
         TerminalCommand cmd = CommandRegistry.create(cmdName, fs, computerPos, args);
         if (cmd == null) {
             addLine("> " + trimmed);
-            addLine("'" + cmdName + "' is not a valid command.");
+            addLine(Component.translatable("message.null_ouroboros.terminus.invalid_command", cmdName).getString());
             return;
         }
 
         addLine("> " + trimmed);
         try {
             cmd.execute();
-            for (Component comp : cmd.getOutput()) {
-                addLine(comp.getString());
+            appendCommandOutput(cmd);
+
+            FileSessionRequest sessionRequest = cmd.getFileSessionRequest();
+            if (sessionRequest != null) {
+                beginFileSession(sessionRequest.file(), fs, sessionRequest.mode());
             }
-            cmd.clearOutput();
+
+            if (cmd.requestsShutdown()) {
+                shutdownRequested = true;
+            }
+
+            if (cmd.requestsClear()) {
+                clearToBootState(fs);
+            }
 
             if (!cmd.isDone()) {
                 activeCommand = cmd;
             }
         } catch (Exception e) {
-            addLine("An internal error occurred.");
+            addLine(Component.translatable("message.null_ouroboros.terminus.internal_error").getString());
             activeCommand = null;
             e.printStackTrace();
         }
@@ -106,10 +202,40 @@ public class TerminusSession {
         this.currentPath = fs.getCurrentPath();
     }
 
-    public void syncToClient(ServerPlayer player) {
+    private void appendCommandOutput(TerminalCommand cmd) {
+        for (Component comp : cmd.getOutput()) {
+            addLine(comp.getString());
+        }
+        cmd.clearOutput();
+    }
+
+    public void syncToClient(ServerPlayer player, TerminusFileSystem fs) {
         if (player == null) return;
+
+        ClientBoundDustyComputerSyncPacket.FileSessionType sessionType =
+                ClientBoundDustyComputerSyncPacket.FileSessionType.NONE;
+        String fileContent = "";
+        String filePath = "";
+
+        if (fileSession != null) {
+            sessionType = fileSession.mode() == FileSessionMode.VIEW
+                    ? ClientBoundDustyComputerSyncPacket.FileSessionType.VIEW
+                    : ClientBoundDustyComputerSyncPacket.FileSessionType.EDIT;
+            filePath = fileSession.filePath();
+            TerminusNode node = fs.resolvePath(fileSession.filePath());
+            if (node instanceof TerminusTextFile textFile) {
+                fileContent = textFile.getContent();
+            }
+        }
+
         PacketHandlerRegistry.INSTANCE.send(
                 PacketDistributor.PLAYER.with(() -> player),
-                new ClientBoundDustyComputerSyncPacket(computerPos, new ArrayList<>(lines), currentPath));
+                new ClientBoundDustyComputerSyncPacket(
+                        computerPos,
+                        new ArrayList<>(lines),
+                        currentPath,
+                        sessionType,
+                        fileContent,
+                        filePath));
     }
 }
