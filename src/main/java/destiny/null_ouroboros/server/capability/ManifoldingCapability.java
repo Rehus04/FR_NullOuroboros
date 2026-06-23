@@ -277,7 +277,6 @@ public class ManifoldingCapability implements INBTSerializable<CompoundTag> {
 
     public void damageIfExposed(LivingEntity entity, ServerLevel level) {
         if (phase != ManifoldingPhase.ACTIVE) return;
-        if (entity.isSpectator()) return;
         if (entity.isInvulnerableTo(level.damageSources().generic())) return;
         if (entity instanceof BurrowBeaconEntity) return;
 
@@ -297,13 +296,19 @@ public class ManifoldingCapability implements INBTSerializable<CompoundTag> {
             if (player.isCreative()) return;
         }
 
+        if (entity.isSpectator()) {
+            playerExposed.put(entity.getUUID(), exposed);
+
+            return;
+        }
+
         if (exposed) {
             long now = level.getGameTime();
             UUID id = entity.getUUID();
             long lastDamage = entityLastDamageTick.getOrDefault(id, 0L);
 
             if (now - lastDamage >= DAMAGE_INTERVAL) {
-                entity.hurt(DamageTypeRegistry.getSimpleDamageSource(level, DamageTypeRegistry.MANIFOLDING_ERASURE), 1f);
+                entity.hurt(DamageTypeRegistry.getSimpleDamageSource(level, DamageTypeRegistry.MANIFOLDING_ERASURE), 2f);
                 entityLastDamageTick.put(id, now);
             }
         }
