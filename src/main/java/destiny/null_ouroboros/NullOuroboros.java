@@ -6,10 +6,7 @@ import destiny.null_ouroboros.client.render.blockentity.StrobelightBlockEntityRe
 import destiny.null_ouroboros.client.render.blockentity.TemporalSurgeDetectorBlockEntityRenderer;
 import destiny.null_ouroboros.client.render.dimension.VergeOfRealityDimensionEffects;
 import destiny.null_ouroboros.client.render.entity.BurrowBeaconEntityRenderer;
-import destiny.null_ouroboros.client.render.model.BurrowBeaconEntityModel;
-import destiny.null_ouroboros.client.render.model.MechanicalSirenBlockModel;
-import destiny.null_ouroboros.client.render.model.StrobelightBlockModel;
-import destiny.null_ouroboros.client.render.model.TemporalSurgeDetectorBlockModel;
+import destiny.null_ouroboros.client.render.model.*;
 import destiny.null_ouroboros.client.render.particle.AshParticle;
 import destiny.null_ouroboros.client.screen.DustyComputerScreen;
 import destiny.null_ouroboros.server.registry.*;
@@ -72,6 +69,7 @@ public class NullOuroboros {
             event.registerLayerDefinition(MechanicalSirenBlockModel.LAYER_LOCATION, MechanicalSirenBlockModel::createBodyLayer);
             event.registerLayerDefinition(TemporalSurgeDetectorBlockModel.LAYER_LOCATION, TemporalSurgeDetectorBlockModel::createBodyLayer);
             event.registerLayerDefinition(BurrowBeaconEntityModel.LAYER_LOCATION, BurrowBeaconEntityModel::createBodyLayer);
+            event.registerLayerDefinition(ElectromagneticAssemblyBlockModel.LAYER_LOCATION, ElectromagneticAssemblyBlockModel::createBodyLayer);
         }
 
         @SubscribeEvent
