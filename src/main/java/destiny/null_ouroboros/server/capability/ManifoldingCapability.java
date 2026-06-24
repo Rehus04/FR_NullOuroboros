@@ -216,7 +216,6 @@ public class ManifoldingCapability implements INBTSerializable<CompoundTag> {
         switch (newPhase) {
             case PRE_EVENT -> {
                 erodedChunksThisEvent.clear();
-                windAngle = level.random.nextFloat() * 360;
 
                 activateSirens(level);
                 playThunder(level);
@@ -260,6 +259,7 @@ public class ManifoldingCapability implements INBTSerializable<CompoundTag> {
         activeDuration = level.random.nextInt(ACTIVE_MIN, ACTIVE_MAX + 1);
         postEventDuration = level.random.nextInt(POST_EVENT_MIN, POST_EVENT_MAX + 1);
         timeUntilNextEvent = level.random.nextInt(CLEAR_DELAY_MIN, CLEAR_DELAY_MAX + 1);
+        windAngle = level.random.nextFloat() * 360;
     }
 
     private void activateSirens(ServerLevel level) {
@@ -649,6 +649,18 @@ public class ManifoldingCapability implements INBTSerializable<CompoundTag> {
 
     public int getActiveDuration() {
         return activeDuration;
+    }
+
+    public int getTimeUntilNextEvent() {
+        return timeUntilNextEvent;
+    }
+
+    public int getPreEventDuration() {
+        return preEventDuration;
+    }
+
+    public int getPostEventDuration() {
+        return postEventDuration;
     }
 
     public boolean isChunkEroded(long chunkPos) {

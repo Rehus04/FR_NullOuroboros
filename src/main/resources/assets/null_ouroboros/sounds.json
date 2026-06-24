@@ -285,6 +285,14 @@
       }
     ]
   },
+  "dusty_computer_load": {
+    "subtitle": "subtitle.null_ouroboros.dusty_computer_load",
+    "sounds": [
+      {
+        "name": "null_ouroboros:dusty_computer_load"
+      }
+    ]
+  },
   "verge_ambience": {
     "subtitle": "subtitle.null_ouroboros.verge_ambience",
     "sounds": [

@@ -251,4 +251,14 @@ public class DustyComputerBlock extends BaseEntityBlock {
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
         return createTickerHelper(type, BlockEntityRegistry.DUSTY_COMPUTER_BLOCK_ENTITY.get(), DustyComputerBlockEntity::tick);
     }
+
+    @Override
+    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos fromPos, boolean isMoving) {
+        if (level.isClientSide) {
+            return;
+        }
+        if (fromPos.equals(pos.above()) && level.getBlockEntity(pos) instanceof DustyComputerBlockEntity computer) {
+            computer.refreshEmaConnection();
+        }
+    }
 }
