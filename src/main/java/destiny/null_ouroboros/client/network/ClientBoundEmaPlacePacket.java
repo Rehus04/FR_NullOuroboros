@@ -35,6 +35,7 @@ public class ClientBoundEmaPlacePacket {
             if (level != null && level.getBlockEntity(pkt.pos) instanceof ElectromagneticAssemblyBlockEntity be) {
                 be.spinnerAngle = pkt.spinnerAngle;
                 be.vaneBaseAngle = pkt.vaneBaseAngle;
+                be.vaneReachedTarget = false;
                 be.initialized = true;
             }
         });

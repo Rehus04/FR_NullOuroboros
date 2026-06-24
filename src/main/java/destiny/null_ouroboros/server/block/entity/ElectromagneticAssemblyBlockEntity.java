@@ -26,7 +26,7 @@ public class ElectromagneticAssemblyBlockEntity extends BlockEntity {
     public static final float SPINNER_ACCELERATION = MAX_SPINNER_SPEED / (3f * 20f);
     public static final float SPINNER_DECELERATION = MAX_SPINNER_SPEED / (8f * 20f);
 
-    public static final float VANE_REST_TIP_WORLD_YAW = 90f;
+    public static final float VANE_REST_TIP_WORLD_YAW = 270f;
     public static final float APPROACH_THRESHOLD = 2f;
     public static final float VANE_APPROACH_SPEED = 3f;
     public static final float SWAY_LEEWAY_MIN = 5f;
@@ -41,8 +41,6 @@ public class ElectromagneticAssemblyBlockEntity extends BlockEntity {
     public float vaneOscPhase = 0f;
     public boolean vaneReachedTarget = false;
     public boolean initialized = false;
-
-    private float lastWindAngle = 0f;
 
     public ElectromagneticAssemblyBlockEntity(BlockPos pos, BlockState state) {
         super(BlockEntityRegistry.ELECTROMAGNETIC_ASSEMBLY_BLOCK_ENTITY.get(), pos, state);
@@ -75,24 +73,24 @@ public class ElectromagneticAssemblyBlockEntity extends BlockEntity {
         }
         be.spinnerAngle = (be.spinnerAngle + be.spinnerSpeed) % 360f;
 
-        if (Math.abs(angleDiff(be.lastWindAngle, windAngle)) > WIND_ANGLE_RESET_THRESHOLD) {
-            be.vaneReachedTarget = false;
-            be.lastWindAngle = windAngle;
-        }
-
         float targetLocal = computeVaneTargetAngle(windAngle, facing);
+        float targetDiff = angleDiff(be.vaneBaseAngle, targetLocal);
 
         if (phase != ManifoldingPhase.CLEAR && windStrength > 0f) {
+            if (Math.abs(targetDiff) > WIND_ANGLE_RESET_THRESHOLD) {
+                be.vaneReachedTarget = false;
+            }
             if (!be.vaneReachedTarget) {
-                float diff = angleDiff(be.vaneBaseAngle, targetLocal);
                 float approachSpeed = phase == ManifoldingPhase.PRE_EVENT ? VANE_APPROACH_SPEED * 0.5f : VANE_APPROACH_SPEED;
-                if (Math.abs(diff) <= APPROACH_THRESHOLD) {
+                if (Math.abs(targetDiff) <= APPROACH_THRESHOLD) {
                     be.vaneBaseAngle = targetLocal;
                     be.vaneReachedTarget = true;
                 } else {
-                    float step = Math.min(approachSpeed, Math.abs(diff));
-                    be.vaneBaseAngle += Math.signum(diff) * step;
+                    float step = Math.min(approachSpeed, Math.abs(targetDiff));
+                    be.vaneBaseAngle = normalizeDegrees(be.vaneBaseAngle + Math.signum(targetDiff) * step);
                 }
+            } else {
+                be.vaneBaseAngle = targetLocal;
             }
         }
 
@@ -121,7 +119,7 @@ public class ElectromagneticAssemblyBlockEntity extends BlockEntity {
     }
 
     public static float computeVaneTargetAngle(float windAngle, Direction facing) {
-        return windAngle - VANE_REST_TIP_WORLD_YAW - getFacingYawOffset(facing);
+        return normalizeDegrees(windAngle - VANE_REST_TIP_WORLD_YAW + getFacingYawOffset(facing));
     }
 
     public float getVaneRenderAngle() {
@@ -178,7 +176,7 @@ public class ElectromagneticAssemblyBlockEntity extends BlockEntity {
     }
 
     private static float angleDiff(float from, float to) {
-        float diff = (to - from) % 360f;
+        float diff = (normalizeDegrees(to) - normalizeDegrees(from)) % 360f;
         if (diff > 180f) {
             diff -= 360f;
         }
@@ -186,6 +184,14 @@ public class ElectromagneticAssemblyBlockEntity extends BlockEntity {
             diff += 360f;
         }
         return diff;
+    }
+
+    private static float normalizeDegrees(float angle) {
+        angle %= 360f;
+        if (angle < 0f) {
+            angle += 360f;
+        }
+        return angle;
     }
 
     @Override
@@ -201,6 +207,7 @@ public class ElectromagneticAssemblyBlockEntity extends BlockEntity {
         super.load(tag);
         spinnerAngle = tag.getFloat(SPINNER_ANGLE);
         vaneBaseAngle = tag.getFloat(VANE_BASE_ANGLE);
+        vaneReachedTarget = false;
         initialized = tag.getBoolean(INITIALIZED);
     }
 }
