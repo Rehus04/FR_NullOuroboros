@@ -308,5 +308,19 @@
         "name": "null_ouroboros:verge_ambience"
       }
     ]
+  },
+  "stop_sign_hit": {
+    "subtitle": "subtitle.null_ouroboros.stop_sign_hit",
+    "sounds": [
+      {
+        "name": "null_ouroboros:stop_sign_hit_1"
+      },
+      {
+        "name": "null_ouroboros:stop_sign_hit_2"
+      },
+      {
+        "name": "null_ouroboros:stop_sign_hit_3"
+      }
+    ]
   }
 }

@@ -50,6 +50,8 @@ public class SoundRegistry {
     public static final RegistryObject<SoundEvent> DUSTY_COMPUTER_LOAD = registerSoundEvent("dusty_computer_load");
     public static final RegistryObject<SoundEvent> DUSTY_COMPUTER_LOAD_SHORT = registerSoundEvent("dusty_computer_load_short");
 
+    public static final RegistryObject<SoundEvent> STOP_SIGN_HIT = registerSoundEvent("stop_sign_hit");
+
     private static RegistryObject<SoundEvent> registerSoundEvent(String sound) {
         return SOUNDS.register(sound, () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(NullOuroboros.MODID, sound)));
     }
