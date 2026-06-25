@@ -4,6 +4,7 @@ import destiny.null_ouroboros.NullOuroboros;
 import destiny.null_ouroboros.client.network.*;
 import destiny.null_ouroboros.server.network.ServerBoundDustyComputerCloseFileSessionPacket;
 import destiny.null_ouroboros.server.network.ServerBoundDustyComputerCommandPacket;
+import destiny.null_ouroboros.server.network.ServerBoundDustyComputerP2pToggleModePacket;
 import destiny.null_ouroboros.server.network.ServerBoundDustyComputerShutdownPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkDirection;
@@ -85,6 +86,12 @@ public class PacketHandlerRegistry {
                 .encoder(ServerBoundDustyComputerCloseFileSessionPacket::encode)
                 .decoder(ServerBoundDustyComputerCloseFileSessionPacket::decode)
                 .consumerMainThread(ServerBoundDustyComputerCloseFileSessionPacket::handle)
+                .add();
+
+        INSTANCE.messageBuilder(ServerBoundDustyComputerP2pToggleModePacket.class, index++, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(ServerBoundDustyComputerP2pToggleModePacket::encode)
+                .decoder(ServerBoundDustyComputerP2pToggleModePacket::decode)
+                .consumerMainThread(ServerBoundDustyComputerP2pToggleModePacket::handle)
                 .add();
     }
 }

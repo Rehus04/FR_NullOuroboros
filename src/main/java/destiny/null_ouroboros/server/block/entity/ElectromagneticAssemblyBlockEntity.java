@@ -168,7 +168,7 @@ public class ElectromagneticAssemblyBlockEntity extends BlockEntity {
     }
 
     public static float getCompassCounterRotation(Direction facing) {
-        return 180f - getFacingYawOffset(facing);
+        return 180f + getFacingYawOffset(facing);
     }
 
     public static float getFacingYRot(Direction facing) {
