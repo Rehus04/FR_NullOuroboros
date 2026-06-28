@@ -53,9 +53,11 @@ public class RedstickEntity extends Entity {
     private Vec3 previousRenderAxis = new Vec3(0.0D, 1.0D, 0.0D);
     private static final double SURFACE_CLEARANCE = 0.075D;
     private static final double THROW_SPIN_SPEED = 0.35D;
-    private static final double REST_VELOCITY_SQR = 2.5E-4D;
-    private static final double AIR_DAMPING = 0.97D;
-    private static final double GROUND_DAMPING = 0.35D;
+    private static final double REST_VELOCITY_SQR = 4.0E-6D;
+    private static final double AIR_DAMPING = 0.992D;
+    private static final double GROUND_DAMPING = 0.55D;
+    private static final double LEDGE_PIVOT_DAMPING = 0.92D;
+    private static final double MAX_SPEED = 2.0D;
 
     public RedstickEntity(EntityType<? extends RedstickEntity> type, Level level) {
         super(type, level);
@@ -292,17 +294,26 @@ public class RedstickEntity extends Entity {
 
         missingEndTicks = 0;
 
+        wakeIfSupportLost(topEnd, bottomEnd);
+
         Vec3 topStart = topEnd.position();
         Vec3 bottomStart = bottomEnd.position();
 
+        Vec3 topTickVelocity = topEnd.getDeltaMovement();
+        Vec3 bottomTickVelocity = bottomEnd.getDeltaMovement();
+
         for (int step = 0; step < PHYSICS_SUBSTEPS; step++) {
-            applyGravityAndMoveSubstep(topEnd);
-            applyGravityAndMoveSubstep(bottomEnd);
+            applyGravityAndMoveSubstep(topEnd, topTickVelocity);
+            applyGravityAndMoveSubstep(bottomEnd, bottomTickVelocity);
             RedstickPhysics.enforceStickLength(topEnd, bottomEnd);
         }
 
-        updateMomentumFromPositions(topEnd, topStart);
-        updateMomentumFromPositions(bottomEnd, bottomStart);
+        topEnd.resolvePenetration();
+        bottomEnd.resolvePenetration();
+
+        updateMomentumFromPositions(topEnd, bottomEnd, topStart);
+        updateMomentumFromPositions(bottomEnd, topEnd, bottomStart);
+        RedstickPhysics.resolveFlatEdgeWedging(topEnd, bottomEnd);
         settleIfResting(topEnd, bottomEnd);
 
         updateParentFromEnds();
@@ -314,12 +325,13 @@ public class RedstickEntity extends Entity {
         }
     }
 
-    private void applyGravityAndMoveSubstep(RedstickEndEntity end) {
+    private void applyGravityAndMoveSubstep(RedstickEndEntity end, Vec3 tickVelocity) {
+        Vec3 step = tickVelocity.scale(1.0D / PHYSICS_SUBSTEPS);
         if (!end.isNoGravity()) {
-            end.setDeltaMovement(end.getDeltaMovement().add(0.0D, RedstickPhysics.GRAVITY / PHYSICS_SUBSTEPS, 0.0D));
+            step = step.add(0.0D, RedstickPhysics.GRAVITY / PHYSICS_SUBSTEPS, 0.0D);
         }
 
-        end.move(MoverType.SELF, end.getDeltaMovement().scale(1.0D / PHYSICS_SUBSTEPS));
+        end.moveWithCollision(step);
     }
 
     private void relinkEndsIfNeeded() {
@@ -349,26 +361,66 @@ public class RedstickEntity extends Entity {
         }
     }
 
-    private void updateMomentumFromPositions(RedstickEndEntity end, Vec3 previousPosition) {
-        Vec3 velocity = end.position().subtract(previousPosition).scale(AIR_DAMPING);
+    private void updateMomentumFromPositions(RedstickEndEntity end, RedstickEndEntity partnerEnd, Vec3 previousPosition) {
+        Vec3 velocity = end.position().subtract(previousPosition);
 
-        if (end.onGround()) {
-            velocity = new Vec3(velocity.x * GROUND_DAMPING, Math.max(0.0D, velocity.y), velocity.z * GROUND_DAMPING);
+        boolean fullSupport = RedstickPhysics.hasFootprintSupport(end);
+        boolean partialSupport = RedstickPhysics.hasPartialFootprintSupport(end);
+        boolean partnerFullSupport = RedstickPhysics.hasFootprintSupport(partnerEnd);
+
+        if (fullSupport && partnerFullSupport) {
+            velocity = applyGroundFriction(velocity, GROUND_DAMPING);
+        } else if (fullSupport) {
+            velocity = applyGroundFriction(velocity, GROUND_DAMPING);
+        } else if (partialSupport) {
+            velocity = new Vec3(
+                    velocity.x * LEDGE_PIVOT_DAMPING,
+                    Math.min(velocity.y, RedstickPhysics.GRAVITY),
+                    velocity.z * LEDGE_PIVOT_DAMPING);
+        } else {
+            velocity = velocity.scale(AIR_DAMPING);
+            if (end.horizontalCollision) {
+                velocity = new Vec3(velocity.x * 0.85D, velocity.y, velocity.z * 0.85D);
+            }
         }
 
-        if (end.horizontalCollision) {
-            velocity = new Vec3(velocity.x * 0.25D, velocity.y, velocity.z * 0.25D);
-        }
-
-        if (velocity.lengthSqr() < 1.0E-5D) {
+        if (velocity.lengthSqr() < 1.0E-8D) {
             velocity = Vec3.ZERO;
+        }
+
+        double maxSpeedSqr = MAX_SPEED * MAX_SPEED;
+        if (velocity.lengthSqr() > maxSpeedSqr) {
+            velocity = velocity.normalize().scale(MAX_SPEED);
         }
 
         end.setDeltaMovement(velocity);
     }
 
+    private static Vec3 applyGroundFriction(Vec3 velocity, double horizontalFriction) {
+        return new Vec3(
+                velocity.x * horizontalFriction,
+                Math.max(0.0D, velocity.y),
+                velocity.z * horizontalFriction);
+    }
+
+    private void wakeIfSupportLost(RedstickEndEntity topEnd, RedstickEndEntity bottomEnd) {
+        if (!isAtRest()) {
+            return;
+        }
+
+        if (!RedstickPhysics.hasFootprintSupport(topEnd) || !RedstickPhysics.hasFootprintSupport(bottomEnd)) {
+            setAtRest(false);
+        }
+    }
+
     private void settleIfResting(RedstickEndEntity topEnd, RedstickEndEntity bottomEnd) {
-        if (!topEnd.onGround() || !bottomEnd.onGround()) {
+        if (!RedstickPhysics.hasFootprintSupport(topEnd) || !RedstickPhysics.hasFootprintSupport(bottomEnd)) {
+            setAtRest(false);
+            return;
+        }
+
+        if (topEnd.getDeltaMovement().horizontalDistanceSqr() > REST_VELOCITY_SQR
+                || bottomEnd.getDeltaMovement().horizontalDistanceSqr() > REST_VELOCITY_SQR) {
             setAtRest(false);
             return;
         }

@@ -75,7 +75,6 @@ public class ManifoldingSoundManager {
         private final Supplier<SoundEvent> normalSupplier, muffledSupplier;
         private final float normalVol, muffledVol;
         private final boolean looping;
-        private boolean played;
 
         SoundPair(Supplier<SoundEvent> normalSupplier, Supplier<SoundEvent> muffledSupplier, float nVol, float mVol, boolean looping) {
             this.normalSupplier = normalSupplier;
@@ -86,37 +85,19 @@ public class ManifoldingSoundManager {
         }
 
         void update(Minecraft mc, boolean active, float exposure) {
-            if (looping) {
-                if (active) {
-                    if (normal == null) {
-                        startNormalAndMuffled(mc, exposure);
-                    } else {
-                        normal.setTargetVolume(exposure * normalVol);
-                        muffled.setTargetVolume((1f - exposure) * muffledVol);
-                    }
+            if (active) {
+                if (normal == null) {
+                    startNormalAndMuffled(mc, exposure);
                 } else {
-                    if (normal != null) {
-                        normal.setTargetVolume(0f);
-                        muffled.setTargetVolume(0f);
-                        if (normal.isStopped() && muffled.isStopped()) {
-                            normal = null;
-                            muffled = null;
-                        }
-                    }
+                    normal.setTargetVolume(exposure * normalVol);
+                    muffled.setTargetVolume((1f - exposure) * muffledVol);
                 }
-            } else {
-                if (active) {
-                    if (!played) {
-                        boolean useMuffled = exposure < 0.5f;
-                        SoundEvent chosen = useMuffled ? muffledSupplier.get() : normalSupplier.get();
-                        float chosenVol = useMuffled ? muffledVol : normalVol;
-                        ManifoldingSoundInstance sound = new ManifoldingSoundInstance(chosen, SoundSource.AMBIENT, false);
-                        sound.forceVolume(chosenVol);
-                        mc.getSoundManager().play(sound);
-                        played = true;
-                    }
-                } else {
-                    played = false;
+            } else if (normal != null) {
+                normal.setTargetVolume(0f);
+                muffled.setTargetVolume(0f);
+                if (normal.isStopped() && muffled.isStopped()) {
+                    normal = null;
+                    muffled = null;
                 }
             }
         }
@@ -130,8 +111,8 @@ public class ManifoldingSoundManager {
         }
 
         private void startNormalAndMuffled(Minecraft mc, float exposure) {
-            normal = new ManifoldingSoundInstance(normalSupplier.get(), SoundSource.AMBIENT, true);
-            muffled = new ManifoldingSoundInstance(muffledSupplier.get(), SoundSource.AMBIENT, true);
+            normal = new ManifoldingSoundInstance(normalSupplier.get(), SoundSource.AMBIENT, looping);
+            muffled = new ManifoldingSoundInstance(muffledSupplier.get(), SoundSource.AMBIENT, looping);
             normal.forceVolume(exposure * normalVol);
             muffled.forceVolume((1f - exposure) * muffledVol);
             mc.getSoundManager().play(normal);
