@@ -21,8 +21,11 @@
   "block.null_ouroboros.electromagnetic_assembly": "Module électromagnétique",
 
   "item.null_ouroboros.burrow_beacon": "Balise à terrier",
+  "item.null_ouroboros.redstick": "Bâton rouge",
 
   "entity.null_ouroboros.burrow_beacon": "Balise à terrier",
+  "entity.null_ouroboros.redstick": "Bâton rouge",
+  "entity.null_ouroboros.redstick_end": "Bâton rouge Fin",
 
   "death.attack.null_ouroboros.manifolding_erasure": "%1$s a été effacé(e) de l'existence.",
   "death.attack.null_ouroboros.burrow_beacon_drill": "%1$s est devenu(e) le point d'ancrage de la balise à terrier",
